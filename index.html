@@ -182,6 +182,11 @@
     </style>
 </head>
 <body>
+    <!-- Netlify Form Declaration - REQUIRED -->
+    <form name="win-form" data-netlify="true" data-netlify-recaptcha="true" hidden>
+        <input type="hidden" name="form-name" value="win-form">
+    </form>
+
     <img src="https://raw.githubusercontent.com/hopmos/webimage/main/Hopmoslogo.png" alt="HOPMOS Giveaway Logo" class="logo">
     <h1>GIVEAWAY GAMES</h1>
     <button id="instructionsBtn">How to Play</button>
@@ -194,6 +199,7 @@
         <button id="startBtn" style="display: none;">Start</button>
     </div>
 
+    <script src="https://www.google.com/recaptcha/api.js?render=YOUR_SITE_KEY"></script>
     <script>
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
@@ -388,24 +394,28 @@ Click "Start" to begin!
             startBtn.style.display = 'none';
         }
 
+        // ✅ FIXED: Netlify Form Submission - CORRECTED VERSION
         function showForm(amount) {
             prizeAmount = amount;
-            console.log(`Showing form with prize: ${amount}, points: ${points}`); // Debug log
+            console.log(`Showing form with prize: ${amount}, points: ${points}`);
 
-            // Create form HTML dynamically
             let formHtml = `
                 <p>Congratulations! You won ${amount} for ${prizeType}!</p>
-                <form id="win-form" name="win-form" method="POST" action="/" data-netlify="true" data-netlify-recaptcha="true">
+                <form id="win-form-visible" class="win-form">
                     <input type="hidden" name="form-name" value="win-form">
                     <input type="hidden" name="prize_type" value="${prizeType}">
                     <input type="hidden" name="amount" value="${amount}">
-                    <label>Full Name: <input type="text" name="full_name" required placeholder="e.g., John Doe"></label>
-                    <br>`;
+                    <input type="hidden" name="points" value="${points}">
+                    
+                    <label>Full Name: 
+                        <input type="text" name="full_name" required placeholder="e.g., John Doe">
+                    </label><br>`;
             
             if (prizeType === 'Airtime' || prizeType === 'Data') {
                 formHtml += `
-                    <label>Phone Number: <input type="tel" name="phone_number" pattern="[0-9]{10,11}" required placeholder="e.g., 08012345678"></label>
-                    <br>
+                    <label>Phone Number: 
+                        <input type="tel" name="phone_number" pattern="[0-9]{10,11}" required placeholder="e.g., 08012345678">
+                    </label><br>
                     <label>Network: 
                         <select name="network" required>
                             <option value="" disabled selected>Select Network</option>
@@ -413,69 +423,86 @@ Click "Start" to begin!
                             <option value="AIRTEL">AIRTEL</option>
                             <option value="GLO">GLO</option>
                         </select>
-                    </label>
-                    <br>`;
+                    </label><br>`;
             } else if (prizeType === 'Cash') {
                 formHtml += `
-                    <label>Bank Name: <input type="text" name="bank_name" required placeholder="e.g., First Bank"></label>
-                    <br>
-                    <label>Account Number: <input type="text" name="account_number" pattern="[0-9]{10}" required placeholder="e.g., 1234567890"></label>
-                    <br>`;
+                    <label>Bank Name: 
+                        <input type="text" name="bank_name" required placeholder="e.g., First Bank">
+                    </label><br>
+                    <label>Account Number: 
+                        <input type="text" name="account_number" pattern="[0-9]{10}" required placeholder="e.g., 1234567890">
+                    </label><br>`;
             }
             
             formHtml += `
-                    <div data-netlify-recaptcha="true"></div>
-                    <button type="submit">Submit</button>
-                </form>`;
+                    <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY"></div>
+                    <button type="submit">Submit Prize Claim</button>
+                </form>
+                <p><small>We'll process your prize within 24 hours!</small></p>`;
             
             modalMessage.innerHTML = formHtml;
             modal.className = 'congratulations';
             modal.style.display = 'block';
             overlay.style.display = 'block';
 
-            // Handle form submission
-            const form = document.getElementById('win-form');
-            form.addEventListener('submit', async (e) => {
+            // ✅ FIXED: Proper Netlify Form Submission
+            const visibleForm = document.getElementById('win-form-visible');
+            visibleForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
-                // Collect form data
-                const formData = new FormData(form);
-                const data = {};
-                formData.forEach((value, key) => (data[key] = value));
-                
-                // Encode form data for Netlify
-                const encoded = new URLSearchParams(data).toString();
-                console.log(`Form data to submit: ${encoded}`); // Debug log
-
-                try {
-                    const response = await fetch('/', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: encoded
-                    });
-
-                    if (response.ok) {
-                        modalMessage.innerHTML = `Thank you, ${data.full_name}! Your submission for ${amount} ${prizeType} has been received! We'll process your request soon.`;
-                        modal.className = 'congratulations';
-                        hasSpun = true;
-                        spinBtn.disabled = true;
-                    } else {
-                        modalMessage.innerHTML = `Submission failed. Please try again later. (Status: ${response.status})`;
-                        modal.className = 'oops';
-                        console.error(`Form submission failed with status: ${response.status}`);
-                    }
-                } catch (error) {
-                    modalMessage.innerHTML = 'Submission failed due to a network error. Please check your connection and try again.';
-                    modal.className = 'oops';
-                    console.error('Form submission error:', error);
+                // Get reCAPTCHA token
+                const recaptchaResponse = grecaptcha.getResponse();
+                if (!recaptchaResponse) {
+                    alert('Please complete the reCAPTCHA verification');
+                    return;
                 }
-            });
+                
+                // Clone hidden Netlify form and populate it
+                const netlifyForm = document.querySelector('form[name="win-form"]');
+                const formData = new FormData(visibleForm);
+                
+                // Copy all fields to hidden Netlify form
+                formData.forEach((value, key) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = value;
+                    netlifyForm.appendChild(input);
+                });
+                
+                // Add reCAPTCHA response
+                const recaptchaInput = document.createElement('input');
+                recaptchaInput.type = 'hidden';
+                recaptchaInput.name = 'g-recaptcha-response';
+                recaptchaInput.value = recaptchaResponse;
+                netlifyForm.appendChild(recaptchaInput);
+                
+                console.log('Submitting to Netlify:', Object.fromEntries(formData));
 
-            // Log input interactions for debugging
-            const inputs = form.querySelectorAll('input, select');
-            inputs.forEach(input => {
-                input.addEventListener('focus', () => console.log(`Input focused: ${input.name}`));
-                input.addEventListener('input', (e) => console.log(`Input changed: ${input.name} = ${e.target.value}`));
+                // Submit to Netlify (no AJAX needed - Netlify handles it)
+                netlifyForm.submit();
+                
+                // Show success message immediately
+                modalMessage.innerHTML = `
+                    <p style="color: green; font-size: 18px;">
+                        ✅ Thank you, ${formData.get('full_name') || 'Winner'}!<br>
+                        Your ${amount} ${prizeType} claim has been submitted successfully!<br>
+                        We'll process it within 24 hours.
+                    </p>
+                    <button id="closeSuccess" style="margin-top: 15px;">Close</button>
+                `;
+                
+                // Handle close button
+                document.getElementById('closeSuccess').addEventListener('click', () => {
+                    modal.style.display = 'none';
+                    overlay.style.display = 'none';
+                    hasSpun = true;
+                    spinBtn.disabled = true;
+                    resetWheel();
+                });
+                
+                // Reset reCAPTCHA
+                grecaptcha.reset();
             });
         }
 
@@ -484,7 +511,6 @@ Click "Start" to begin!
             overlay.style.display = 'none';
             spinBtn.disabled = hasSpun || spinning;
 
-            // Start ball game timer when closing ball game instructions
             if (isBallDrop && modalMessage.textContent.includes('Tap the dropping balls')) {
                 startBallGame = true;
                 gameStartTime = performance.now();
@@ -509,8 +535,8 @@ Click "Start" to begin!
             currentAngle = 0;
             drawWheel();
 
-            const spinTime = Math.random() * 3000 + 2000; // 2-5s
-            const pointerAngle = 270; // Pointer at top
+            const spinTime = Math.random() * 3000 + 2000;
+            const pointerAngle = 270;
             const spinDeg = Math.random() * 360 + 360 * (Math.floor(Math.random() * 5) + 5);
             const finalNormalized = (spinDeg % 360 + 360) % 360;
 
@@ -616,12 +642,12 @@ Click "Start" to begin!
             if (elapsed >= gameDuration) {
                 canvas.removeEventListener('click', handleBallTap);
                 const prizeValue = points * 10;
-                console.log(`Game ended. Points: ${points}, Prize: ${prizeValue}`); // Debug log
+                console.log(`Game ended. Points: ${points}, Prize: ${prizeValue}`);
                 let win = prizeType === 'Data' ? `${prizeValue}MB` : `₦${prizeValue}`;
                 showForm(win);
                 balls = [];
                 popUps = [];
-                points = 0; // Reset after showing form
+                points = 0;
                 startBallGame = false;
                 return;
             }
@@ -689,7 +715,7 @@ Click "Start" to begin!
                     const delta = ball.isBoom ? -2 : 2;
                     points += delta;
                     popUps.push({x: ball.x, y: ball.y, alpha: 1, text: delta > 0 ? '+' + delta : delta, isBoom: ball.isBoom});
-                    console.log(`Ball tapped: ${ball.isBoom ? 'Boom' : 'Regular'}, Points: ${points}`); // Debug log
+                    console.log(`Ball tapped: ${ball.isBoom ? 'Boom' : 'Regular'}, Points: ${points}`);
                 } else {
                     newBalls.push(ball);
                 }
