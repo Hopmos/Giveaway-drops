@@ -206,7 +206,6 @@
     <img src="https://raw.githubusercontent.com/hopmos/webimage/main/Hopmoslogo.png" alt="HOPMOS Giveaway Logo" class="logo">
     <h1>GIVEAWAY GAMES</h1>
     
-    <!-- ✅ ENHANCED SPIN COUNTER -->
     <div id="spinCount">🎯 Spins Left: <span id="spinLeft">1</span>/1</div>
     
     <button id="instructionsBtn">How to Play</button>
@@ -222,13 +221,14 @@
     <script src="https://www.google.com/recaptcha/api.js?render=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></script>
     
     <script>
-        // ✅ FREE SPIN LOGIC - UNLIMITED UNTIL NON-FREE OUTCOME
+        // ✅ FIXED: BLOCK ONLY AFTER FORM SUBMISSION
         const SPIN_KEY = 'hopmos_spins_used';
         const FREE_SPIN_KEY = 'hopmos_free_spins_active';
         let spinsUsed = parseInt(localStorage.getItem(SPIN_KEY)) || 0;
         let freeSpinsActive = localStorage.getItem(FREE_SPIN_KEY) === 'true';
         const MAX_SPINS = 1;
         let spinsLeft = freeSpinsActive ? '∞' : (MAX_SPINS - spinsUsed);
+        let shouldBlockAfterForm = false; // ✅ NEW: DELAY BLOCKING
 
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
@@ -263,7 +263,6 @@
         let startBallGame = false;
         const gameDuration = 10000;
 
-        // ✅ UPDATE SPIN DISPLAY
         function updateSpinDisplay() {
             spinLeft.textContent = spinsLeft;
             spinCount.className = '';
@@ -281,7 +280,6 @@
             }
         }
 
-        // ✅ ACTIVATE FREE SPINS MODE
         function activateFreeSpins() {
             freeSpinsActive = true;
             localStorage.setItem(FREE_SPIN_KEY, 'true');
@@ -289,7 +287,7 @@
             updateSpinDisplay();
         }
 
-        // ✅ BLOCK USER PERMANENTLY
+        // ✅ FIXED: BLOCK ONLY AFTER FORM SUBMISSION
         function blockUser() {
             freeSpinsActive = false;
             spinsUsed = MAX_SPINS;
@@ -301,29 +299,24 @@
             spinBtn.textContent = 'No Spins Left';
         }
 
-        // ✅ UPDATED INSTRUCTIONS
         const instructionsText = `🎯 HOPMOS GIVEAWAY RULES:
 
-1️⃣ 1 SPIN PER USER (Mandatory)
+1️⃣ 1 SPIN PER USER
 
 2️⃣ FREE SPIN MAGIC:
-   • Land on "Free Spin" = FREE EXTRA SPIN! 🎁
-   • Keep landing "Free Spin" = KEEP GETTING FREE SPINS! ♾️
-   • Land ANYTHING ELSE = GAME OVER 🚫
+   • "Free Spin" = FREE EXTRA SPIN! 🎁
+   • Keep getting "Free Spin" = ♾️ UNLIMITED FREE!
+   • ANY OTHER = Complete game → BLOCKED
 
-3️⃣ Ball Game (Airtime/Data/Cash):
-   • Tap green balls: +2 points
-   • Avoid 💣 boom balls: -2 points
-   • 10 seconds = Prize = Points × 10
+3️⃣ WIN FLOW (Airtime/Data/Cash):
+   • Spin → Ball Game (10s) → Form → THEN BLOCKED
 
 4️⃣ Examples:
-   • Spin 1 → Free Spin → Spin 2 (FREE)
-   • Spin 2 → Free Spin → Spin 3 (FREE) 
-   • Spin 3 → Cash → WIN ₦500 → BLOCKED FOREVER
+   • Spin → Free → Free → Cash → Ball Game → Form → BLOCKED
 
-⚠️ After non-free outcome = NO MORE SPINS EVER!
+⚠️ You finish prize claim BEFORE blocking!
 
-Click "Start" to use your 1 spin!`;
+Click "Start"!`;
 
         function showInstructions() {
             modalMessage.textContent = instructionsText;
@@ -378,7 +371,6 @@ Click "Start" to use your 1 spin!`;
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // Wheel drawing functions (unchanged)
         function drawSegments() {
             for (let i = 0; i < numSegments; i++) {
                 const startAngle = i * deg * Math.PI / 180;
@@ -456,9 +448,11 @@ Click "Start" to use your 1 spin!`;
             startBtn.style.display = 'none';
         }
 
-        // Form function (unchanged)
+        // ✅ FIXED: BLOCK ONLY AFTER FORM SUCCESS
         function showForm(amount) {
             prizeAmount = amount;
+            shouldBlockAfterForm = true; // ✅ FLAG TO BLOCK LATER
+            
             let formHtml = `
                 <p>Congratulations! You won <strong>${amount}</strong> ${prizeType}!</p>
                 <form id="win-form-visible" class="win-form">
@@ -556,6 +550,7 @@ Click "Start" to use your 1 spin!`;
 
                 netlifyForm.submit();
                 
+                // ✅ BLOCK ONLY NOW - AFTER SUCCESSFUL SUBMISSION!
                 modalMessage.innerHTML = `
                     <div style="text-align: center; color: green;">
                         <h3>🎉 SUCCESS!</h3>
@@ -569,10 +564,13 @@ Click "Start" to use your 1 spin!`;
                 document.getElementById('closeSuccess').onclick = () => {
                     modal.style.display = 'none';
                     overlay.style.display = 'none';
-                    blockUser();
+                    if (shouldBlockAfterForm) {
+                        blockUser(); // ✅ FINAL BLOCK HERE
+                    }
                     resetWheel();
                 };
                 
+                shouldBlockAfterForm = false;
                 return false;
             };
         }
@@ -589,16 +587,14 @@ Click "Start" to use your 1 spin!`;
                 canvas.addEventListener('click', handleBallTap);
             }
 
-            if (isBallDrop && (modalMessage.innerHTML.includes('Congratulations') || modalMessage.innerHTML.includes('Thank you'))) {
-                blockUser();
-                resetWheel();
-            } else if (modalMessage.textContent.includes('Oops')) {
-                blockUser();
+            // ✅ NO BLOCKING HERE - ONLY AFTER FORM!
+            if (modalMessage.textContent.includes('Oops')) {
+                if (shouldBlockAfterForm) blockUser();
                 resetWheel();
             }
         });
 
-        // ✅ PERFECTED SPIN HANDLER - FREE SPIN LOGIC
+        // ✅ FIXED SPIN HANDLER - NO EARLY BLOCKING
         const spinHandler = debounce(() => {
             if (spinning || (spinsUsed >= MAX_SPINS && !freeSpinsActive)) return;
             
@@ -634,24 +630,18 @@ Click "Start" to use your 1 spin!`;
                     const winIndex = Math.floor(relativeAngle / deg) % numSegments;
                     const result = currentSegments[winIndex];
 
-                    // ✅ FREE SPIN LOGIC - UNLIMITED CHAIN!
                     if (result === 'Free spin') {
                         activateFreeSpins();
                         showModal('🎁 FREE SPIN! Spin AGAIN for FREE!\n♾️ Keep getting free spins!', 'congratulations');
                         spinBtn.disabled = false;
                         spinBtn.textContent = 'FREE Spin!';
                     } 
-                    // ✅ ANY OTHER OUTCOME = BLOCK FOREVER
+                    // ✅ SET FLAG - BLOCK AFTER FORM, NOT NOW!
                     else {
-                        // Use the mandatory spin NOW
-                        if (!freeSpinsActive && spinsUsed < MAX_SPINS) {
-                            spinsUsed = MAX_SPINS;
-                            localStorage.setItem(SPIN_KEY, spinsUsed);
-                        }
-                        blockUser();
-
+                        shouldBlockAfterForm = true;
+                        
                         if (result === 'Empty') {
-                            showModal(`Oops, "${result}"!\n🚫 Your 1 spin + all free spins are used!`, 'oops');
+                            showModal(`Oops, "${result}"!\nComplete this → All spins used!`, 'oops');
                         } else {
                             prizeType = result;
                             isBallDrop = true;
@@ -660,7 +650,7 @@ Click "Start" to use your 1 spin!`;
                             popUps = [];
                             points = 0;
                             spinBtn.textContent = 'Tap Balls';
-                            showModal(`🎉 You won ${result}!\nTap balls for 10s to win amount!\n🚫 All spins used after this!`, 'congratulations');
+                            showModal(`🎉 You won ${result}!\nTap balls for 10s → Form → THEN blocked!`, 'congratulations');
                             spinBtn.disabled = false;
                         }
                     }
