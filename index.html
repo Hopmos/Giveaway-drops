@@ -36,14 +36,14 @@
             border-radius: 20px;
             background: linear-gradient(45deg, #4CAF50, #45a049);
             color: white;
-            min-width: 140px;
+            min-width: 150px;
             text-align: center;
-        }
-        #spinCount.used {
-            background: linear-gradient(45deg, #f44336, #d32f2f);
         }
         #spinCount.free {
             background: linear-gradient(45deg, #FFD700, #FFA500);
+        }
+        #spinCount.used {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
         }
         #instructionsBtn {
             padding: 8px 16px;
@@ -199,7 +199,6 @@
     </style>
 </head>
 <body>
-    <!-- ✅ Netlify Form Declaration -->
     <form name="win-form" data-netlify="true" data-netlify-recaptcha="true" hidden>
         <input type="hidden" name="form-name" value="win-form">
     </form>
@@ -207,8 +206,8 @@
     <img src="https://raw.githubusercontent.com/hopmos/webimage/main/Hopmoslogo.png" alt="HOPMOS Giveaway Logo" class="logo">
     <h1>GIVEAWAY GAMES</h1>
     
-    <!-- ✅ SPIN COUNTER DISPLAY -->
-    <div id="spinCount">🎯 Spins Left: <span id="spinLeft">1</span>/2</div>
+    <!-- ✅ ENHANCED SPIN COUNTER -->
+    <div id="spinCount">🎯 Spins Left: <span id="spinLeft">1</span>/1</div>
     
     <button id="instructionsBtn">How to Play</button>
     <canvas id="wheel" width="400" height="400"></canvas>
@@ -223,11 +222,13 @@
     <script src="https://www.google.com/recaptcha/api.js?render=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></script>
     
     <script>
-        // ✅ LOCALSTORAGE SPIN TRACKING - MAX 2 SPINS
+        // ✅ FREE SPIN LOGIC - UNLIMITED UNTIL NON-FREE OUTCOME
         const SPIN_KEY = 'hopmos_spins_used';
+        const FREE_SPIN_KEY = 'hopmos_free_spins_active';
         let spinsUsed = parseInt(localStorage.getItem(SPIN_KEY)) || 0;
-        const MAX_SPINS = 2; // 1 base + 1 free spin
-        let spinsLeft = MAX_SPINS - spinsUsed;
+        let freeSpinsActive = localStorage.getItem(FREE_SPIN_KEY) === 'true';
+        const MAX_SPINS = 1;
+        let spinsLeft = freeSpinsActive ? '∞' : (MAX_SPINS - spinsUsed);
 
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
@@ -258,78 +259,71 @@
         let balls = [];
         let popUps = [];
         let points = 0;
-        let hasSpun = spinsUsed >= MAX_SPINS;
         let gameStartTime = 0;
         let startBallGame = false;
         const gameDuration = 10000;
 
-        // ✅ UPDATE SPIN COUNTER DISPLAY
+        // ✅ UPDATE SPIN DISPLAY
         function updateSpinDisplay() {
             spinLeft.textContent = spinsLeft;
             spinCount.className = '';
             
-            if (spinsLeft === 0) {
+            if (freeSpinsActive) {
+                spinCount.classList.add('free');
+                spinCount.innerHTML = '🎁 FREE SPINS: <span id="spinLeft">∞</span>';
+            } else if (spinsUsed >= MAX_SPINS) {
                 spinCount.classList.add('used');
+                spinCount.innerHTML = '🚫 NO SPINS LEFT: <span id="spinLeft">0</span>/1';
                 spinBtn.disabled = true;
                 spinBtn.textContent = 'No Spins Left';
-                showModal('🎯 You have used all 2 spins! Thank you for playing HOPMOS Giveaway!', 'oops');
-            } else if (spinsLeft === 1 && spinsUsed === 1) {
-                spinCount.classList.add('free');
-                spinBtn.textContent = 'FREE SPIN!';
             } else {
-                spinBtn.textContent = 'Spin';
+                spinCount.innerHTML = '🎯 Spins Left: <span id="spinLeft">' + spinsLeft + '</span>/1';
             }
         }
 
-        // ✅ GIVE EXTRA SPIN FOR FREE SPIN
-        function useSpin() {
-            spinsUsed++;
-            spinsLeft--;
+        // ✅ ACTIVATE FREE SPINS MODE
+        function activateFreeSpins() {
+            freeSpinsActive = true;
+            localStorage.setItem(FREE_SPIN_KEY, 'true');
+            spinsLeft = '∞';
+            updateSpinDisplay();
+        }
+
+        // ✅ BLOCK USER PERMANENTLY
+        function blockUser() {
+            freeSpinsActive = false;
+            spinsUsed = MAX_SPINS;
+            spinsLeft = 0;
             localStorage.setItem(SPIN_KEY, spinsUsed);
+            localStorage.removeItem(FREE_SPIN_KEY);
             updateSpinDisplay();
+            spinBtn.disabled = true;
+            spinBtn.textContent = 'No Spins Left';
         }
 
-        // ✅ ADD EXTRA SPIN FOR FREE SPIN
-        function addFreeSpin() {
-            spinsLeft++;
-            localStorage.setItem(SPIN_KEY, spinsUsed); // Don't increment used count
-            updateSpinDisplay();
-        }
+        // ✅ UPDATED INSTRUCTIONS
+        const instructionsText = `🎯 HOPMOS GIVEAWAY RULES:
 
-        // ✅ SCROLLABLE INSTRUCTIONS - UPDATED
-        const instructionsText = `Welcome to HOPMOS Giveaway Games!
+1️⃣ 1 SPIN PER USER (Mandatory)
 
-🎯 SPIN RULES:
+2️⃣ FREE SPIN MAGIC:
+   • Land on "Free Spin" = FREE EXTRA SPIN! 🎁
+   • Keep landing "Free Spin" = KEEP GETTING FREE SPINS! ♾️
+   • Land ANYTHING ELSE = GAME OVER 🚫
 
-• 1 BASE SPIN for everyone
-• FREE SPIN = EXTRA 1 SPIN (Total: 2)
-• Max 2 spins per user
+3️⃣ Ball Game (Airtime/Data/Cash):
+   • Tap green balls: +2 points
+   • Avoid 💣 boom balls: -2 points
+   • 10 seconds = Prize = Points × 10
 
-How to Play:
+4️⃣ Examples:
+   • Spin 1 → Free Spin → Spin 2 (FREE)
+   • Spin 2 → Free Spin → Spin 3 (FREE) 
+   • Spin 3 → Cash → WIN ₦500 → BLOCKED FOREVER
 
-1. Spin the Wheel
-   - Win: Airtime, Data, Cash, Free Spin, or Empty
+⚠️ After non-free outcome = NO MORE SPINS EVER!
 
-2. Wheel Outcomes
-   - FREE SPIN: +1 EXTRA SPIN! (Counter: 2/2)
-   - Empty: Game ends
-   - Airtime/Data/Cash: Play ball game
-
-3. Ball-Dropping Game
-   - Tap balls for 10 seconds:
-     - Green: +2 points
-     - Boom (💣): -2 points
-
-4. Prize = Points × 10
-   - Airtime/Cash: ₦ amount
-   - Data: MB amount
-
-5. Claim Prize
-   - Submit form to receive!
-
-⚠️ After 2 spins, you're BLOCKED!
-
-Click "Start" to use your spin!`;
+Click "Start" to use your 1 spin!`;
 
         function showInstructions() {
             modalMessage.textContent = instructionsText;
@@ -347,7 +341,7 @@ Click "Start" to use your spin!`;
             overlay.style.display = 'none';
             modalClose.style.display = 'inline-block';
             startBtn.style.display = 'none';
-            spinBtn.disabled = spinsLeft === 0;
+            spinBtn.disabled = spinsUsed >= MAX_SPINS && !freeSpinsActive;
             updateSpinDisplay();
         });
 
@@ -384,26 +378,23 @@ Click "Start" to use your spin!`;
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
+        // Wheel drawing functions (unchanged)
         function drawSegments() {
             for (let i = 0; i < numSegments; i++) {
                 const startAngle = i * deg * Math.PI / 180;
                 const endAngle = (i + 1) * deg * Math.PI / 180;
-
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, startAngle, endAngle);
                 ctx.closePath();
-
                 ctx.fillStyle = colors[i];
                 ctx.fill();
                 ctx.strokeStyle = '#333';
                 ctx.lineWidth = 2;
                 ctx.stroke();
-
                 const textAngle = startAngle + (endAngle - startAngle) / 2;
                 const textX = centerX + (radius / 1.4) * Math.cos(textAngle);
                 const textY = centerY + (radius / 1.4) * Math.sin(textAngle);
-
                 ctx.save();
                 ctx.translate(textX, textY);
                 ctx.rotate(textAngle + Math.PI / 2);
@@ -465,9 +456,9 @@ Click "Start" to use your spin!`;
             startBtn.style.display = 'none';
         }
 
+        // Form function (unchanged)
         function showForm(amount) {
             prizeAmount = amount;
-
             let formHtml = `
                 <p>Congratulations! You won <strong>${amount}</strong> ${prizeType}!</p>
                 <form id="win-form-visible" class="win-form">
@@ -476,7 +467,7 @@ Click "Start" to use your spin!`;
                     <input type="hidden" name="amount" value="${amount}">
                     <input type="hidden" name="points" value="${points}">
                     <input type="hidden" name="spins_used" value="${spinsUsed}">
-                    <input type="hidden" name="total_spins" value="${MAX_SPINS}">
+                    <input type="hidden" name="free_spins_used" value="${freeSpinsActive ? 'Yes' : 'No'}">
                     
                     <label>Full Name: 
                         <input type="text" name="full_name" required placeholder="e.g., John Doe">
@@ -523,7 +514,6 @@ Click "Start" to use your spin!`;
             const visibleForm = document.getElementById('win-form-visible');
             visibleForm.onsubmit = function(e) {
                 e.preventDefault();
-                
                 const required = visibleForm.querySelectorAll('[required]');
                 let valid = true;
                 required.forEach(field => {
@@ -542,7 +532,6 @@ Click "Start" to use your spin!`;
 
                 const formData = new FormData(visibleForm);
                 const fullName = formData.get('full_name');
-
                 const netlifyForm = document.querySelector('form[name="win-form"]');
                 netlifyForm.innerHTML = '<input type="hidden" name="form-name" value="win-form">';
                 
@@ -563,9 +552,7 @@ Click "Start" to use your spin!`;
                         recaptchaInput.value = recaptchaResponse;
                         netlifyForm.appendChild(recaptchaInput);
                     }
-                } catch(e) {
-                    console.log('reCAPTCHA not loaded');
-                }
+                } catch(e) {}
 
                 netlifyForm.submit();
                 
@@ -574,7 +561,7 @@ Click "Start" to use your spin!`;
                         <h3>🎉 SUCCESS!</h3>
                         <p>Thank you, <strong>${fullName}</strong>!</p>
                         <p>Your <strong>${amount} ${prizeType}</strong> has been submitted!</p>
-                        <p>Spins used: <strong>${spinsUsed}/2</strong></p>
+                        <p>🚫 All spins used. Thank you for playing!</p>
                         <button id="closeSuccess" style="width: 100%; padding: 12px; margin-top: 15px;">Close</button>
                     </div>
                 `;
@@ -582,6 +569,7 @@ Click "Start" to use your spin!`;
                 document.getElementById('closeSuccess').onclick = () => {
                     modal.style.display = 'none';
                     overlay.style.display = 'none';
+                    blockUser();
                     resetWheel();
                 };
                 
@@ -592,7 +580,7 @@ Click "Start" to use your spin!`;
         modalClose.addEventListener('click', () => {
             modal.style.display = 'none';
             overlay.style.display = 'none';
-            spinBtn.disabled = spinsLeft === 0 || spinning;
+            spinBtn.disabled = (spinsUsed >= MAX_SPINS && !freeSpinsActive) || spinning;
 
             if (isBallDrop && modalMessage.textContent.includes('Tap the dropping balls')) {
                 startBallGame = true;
@@ -602,20 +590,17 @@ Click "Start" to use your spin!`;
             }
 
             if (isBallDrop && (modalMessage.innerHTML.includes('Congratulations') || modalMessage.innerHTML.includes('Thank you'))) {
+                blockUser();
                 resetWheel();
             } else if (modalMessage.textContent.includes('Oops')) {
+                blockUser();
                 resetWheel();
             }
         });
 
-        // ✅ FIXED SPIN HANDLER - FREE SPIN GIVES EXTRA!
+        // ✅ PERFECTED SPIN HANDLER - FREE SPIN LOGIC
         const spinHandler = debounce(() => {
-            if (spinning || spinsLeft === 0) return;
-            
-            // ✅ USE SPIN (except for free spin award)
-            if (spinsUsed < 1 || spinsLeft > 1) { // Don't use spin if already on free spin
-                useSpin();
-            }
+            if (spinning || (spinsUsed >= MAX_SPINS && !freeSpinsActive)) return;
             
             spinning = true;
             spinBtn.disabled = true;
@@ -635,7 +620,6 @@ Click "Start" to use your spin!`;
                 const progress = Math.min(elapsed / spinTime, 1);
                 const easeOut = 1 - Math.pow(1 - progress, 5);
                 currentAngle = spinDeg * easeOut;
-
                 drawWheel();
 
                 if (progress < 1) {
@@ -643,50 +627,42 @@ Click "Start" to use your spin!`;
                 } else {
                     currentAngle = finalNormalized;
                     drawWheel();
-
                     spinning = false;
+
                     const normalizedAngle = finalNormalized;
                     const relativeAngle = (pointerAngle - normalizedAngle + 720) % 360;
                     const winIndex = Math.floor(relativeAngle / deg) % numSegments;
                     const result = currentSegments[winIndex];
 
-                    // ✅ FREE SPIN = EXTRA SPIN!
+                    // ✅ FREE SPIN LOGIC - UNLIMITED CHAIN!
                     if (result === 'Free spin') {
-                        addFreeSpin(); // GIVES EXTRA SPIN
-                        showModal(`🎉 CONGRATULATIONS!\nYou won a FREE SPIN!\nSpins Left: ${spinsLeft}/2\nClick Spin for your EXTRA turn!`, 'congratulations');
+                        activateFreeSpins();
+                        showModal('🎁 FREE SPIN! Spin AGAIN for FREE!\n♾️ Keep getting free spins!', 'congratulations');
                         spinBtn.disabled = false;
-                    } else if (result === 'Empty') {
-                        showModal(`Oops, try again!\nSpins Left: ${spinsLeft}/2`, 'oops');
-                    } else if (result === 'Airtime') {
-                        prizeType = 'Airtime';
-                        isBallDrop = true;
-                        currentAngle = 0;
-                        balls = [];
-                        popUps = [];
-                        points = 0;
-                        spinBtn.textContent = 'Tap Balls';
-                        showModal('Tap the dropping balls for 10 seconds to win your Airtime amount!', 'congratulations');
-                        spinBtn.disabled = false;
-                    } else if (result === 'Data') {
-                        prizeType = 'Data';
-                        isBallDrop = true;
-                        currentAngle = 0;
-                        balls = [];
-                        popUps = [];
-                        points = 0;
-                        spinBtn.textContent = 'Tap Balls';
-                        showModal('Tap the dropping balls for 10 seconds to win your Data amount!', 'congratulations');
-                        spinBtn.disabled = false;
-                    } else if (result === 'Cash') {
-                        prizeType = 'Cash';
-                        isBallDrop = true;
-                        currentAngle = 0;
-                        balls = [];
-                        popUps = [];
-                        points = 0;
-                        spinBtn.textContent = 'Tap Balls';
-                        showModal('Tap the dropping balls for 10 seconds to win your Cash amount!', 'congratulations');
-                        spinBtn.disabled = false;
+                        spinBtn.textContent = 'FREE Spin!';
+                    } 
+                    // ✅ ANY OTHER OUTCOME = BLOCK FOREVER
+                    else {
+                        // Use the mandatory spin NOW
+                        if (!freeSpinsActive && spinsUsed < MAX_SPINS) {
+                            spinsUsed = MAX_SPINS;
+                            localStorage.setItem(SPIN_KEY, spinsUsed);
+                        }
+                        blockUser();
+
+                        if (result === 'Empty') {
+                            showModal(`Oops, "${result}"!\n🚫 Your 1 spin + all free spins are used!`, 'oops');
+                        } else {
+                            prizeType = result;
+                            isBallDrop = true;
+                            currentAngle = 0;
+                            balls = [];
+                            popUps = [];
+                            points = 0;
+                            spinBtn.textContent = 'Tap Balls';
+                            showModal(`🎉 You won ${result}!\nTap balls for 10s to win amount!\n🚫 All spins used after this!`, 'congratulations');
+                            spinBtn.disabled = false;
+                        }
                     }
                 }
             }
@@ -723,7 +699,6 @@ Click "Start" to use your spin!`;
 
         function animateBalls() {
             if (!isBallDrop || !startBallGame) return;
-
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             const elapsed = performance.now() - gameStartTime;
@@ -746,9 +721,7 @@ Click "Start" to use your spin!`;
 
             balls = balls.filter(ball => {
                 ball.y += ball.velY;
-                if (ball.y - ball.radius > canvas.height) {
-                    return false;
-                }
+                if (ball.y - ball.radius > canvas.height) return false;
                 drawBall(ball);
                 return true;
             });
@@ -761,21 +734,6 @@ Click "Start" to use your spin!`;
                 ctx.font = 'bold 20px Arial';
                 ctx.textAlign = 'center';
                 ctx.fillText(pop.text, pop.x, pop.y);
-
-                if (pop.isBoom) {
-                    for (let i = 0; i < 5; i++) {
-                        const fireRadius = Math.random() * 10 + 5;
-                        const fireAngle = Math.random() * 2 * Math.PI;
-                        const fireDist = Math.random() * 10;
-                        const fireX = pop.x + fireDist * Math.cos(fireAngle);
-                        const fireY = pop.y + fireDist * Math.sin(fireAngle);
-                        ctx.beginPath();
-                        ctx.arc(fireX, fireY, fireRadius, 0, 2 * Math.PI);
-                        ctx.fillStyle = `rgba(255, ${Math.random() * 100 + 155}, 0, ${pop.alpha})`;
-                        ctx.fill();
-                    }
-                }
-
                 return true;
             });
 
@@ -793,7 +751,6 @@ Click "Start" to use your spin!`;
             const rect = canvas.getBoundingClientRect();
             const clickX = event.clientX - rect.left;
             const clickY = event.clientY - rect.top;
-
             let newBalls = [];
             balls.forEach(ball => {
                 const dist = Math.sqrt((clickX - ball.x) ** 2 + (clickY - ball.y) ** 2);
