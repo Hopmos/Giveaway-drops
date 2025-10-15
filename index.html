@@ -36,11 +36,14 @@
             border-radius: 20px;
             background: linear-gradient(45deg, #4CAF50, #45a049);
             color: white;
-            min-width: 120px;
+            min-width: 140px;
             text-align: center;
         }
         #spinCount.used {
             background: linear-gradient(45deg, #f44336, #d32f2f);
+        }
+        #spinCount.free {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
         }
         #instructionsBtn {
             padding: 8px 16px;
@@ -205,7 +208,7 @@
     <h1>GIVEAWAY GAMES</h1>
     
     <!-- ✅ SPIN COUNTER DISPLAY -->
-    <div id="spinCount">🎯 Spins Left: <span id="spinLeft">1</span>/1</div>
+    <div id="spinCount">🎯 Spins Left: <span id="spinLeft">1</span>/2</div>
     
     <button id="instructionsBtn">How to Play</button>
     <canvas id="wheel" width="400" height="400"></canvas>
@@ -220,10 +223,10 @@
     <script src="https://www.google.com/recaptcha/api.js?render=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></script>
     
     <script>
-        // ✅ LOCALSTORAGE SPIN TRACKING
+        // ✅ LOCALSTORAGE SPIN TRACKING - MAX 2 SPINS
         const SPIN_KEY = 'hopmos_spins_used';
         let spinsUsed = parseInt(localStorage.getItem(SPIN_KEY)) || 0;
-        const MAX_SPINS = 1;
+        const MAX_SPINS = 2; // 1 base + 1 free spin
         let spinsLeft = MAX_SPINS - spinsUsed;
 
         const canvas = document.getElementById('wheel');
@@ -263,26 +266,52 @@
         // ✅ UPDATE SPIN COUNTER DISPLAY
         function updateSpinDisplay() {
             spinLeft.textContent = spinsLeft;
+            spinCount.className = '';
+            
             if (spinsLeft === 0) {
                 spinCount.classList.add('used');
                 spinBtn.disabled = true;
                 spinBtn.textContent = 'No Spins Left';
-                showModal('🎯 You have used your 1 spin! Thank you for playing HOPMOS Giveaway!', 'oops');
+                showModal('🎯 You have used all 2 spins! Thank you for playing HOPMOS Giveaway!', 'oops');
+            } else if (spinsLeft === 1 && spinsUsed === 1) {
+                spinCount.classList.add('free');
+                spinBtn.textContent = 'FREE SPIN!';
+            } else {
+                spinBtn.textContent = 'Spin';
             }
         }
 
-        // ✅ SCROLLABLE INSTRUCTIONS
+        // ✅ GIVE EXTRA SPIN FOR FREE SPIN
+        function useSpin() {
+            spinsUsed++;
+            spinsLeft--;
+            localStorage.setItem(SPIN_KEY, spinsUsed);
+            updateSpinDisplay();
+        }
+
+        // ✅ ADD EXTRA SPIN FOR FREE SPIN
+        function addFreeSpin() {
+            spinsLeft++;
+            localStorage.setItem(SPIN_KEY, spinsUsed); // Don't increment used count
+            updateSpinDisplay();
+        }
+
+        // ✅ SCROLLABLE INSTRUCTIONS - UPDATED
         const instructionsText = `Welcome to HOPMOS Giveaway Games!
 
-🎯 1 SPIN PER USER RULE:
+🎯 SPIN RULES:
+
+• 1 BASE SPIN for everyone
+• FREE SPIN = EXTRA 1 SPIN (Total: 2)
+• Max 2 spins per user
 
 How to Play:
 
-1. Spin the Wheel (1 TIME ONLY)
-   - Win: Airtime, Data, Cash, Free Spin, or Empty.
+1. Spin the Wheel
+   - Win: Airtime, Data, Cash, Free Spin, or Empty
 
 2. Wheel Outcomes
-   - Free Spin: Spin again (uses your 1 spin)
+   - FREE SPIN: +1 EXTRA SPIN! (Counter: 2/2)
    - Empty: Game ends
    - Airtime/Data/Cash: Play ball game
 
@@ -298,7 +327,7 @@ How to Play:
 5. Claim Prize
    - Submit form to receive!
 
-⚠️ After 1 spin, you're BLOCKED until next giveaway!
+⚠️ After 2 spins, you're BLOCKED!
 
 Click "Start" to use your spin!`;
 
@@ -321,15 +350,6 @@ Click "Start" to use your spin!`;
             spinBtn.disabled = spinsLeft === 0;
             updateSpinDisplay();
         });
-
-        // ✅ MARK SPIN AS USED
-        function useSpin() {
-            spinsUsed++;
-            spinsLeft--;
-            localStorage.setItem(SPIN_KEY, spinsUsed);
-            hasSpun = true;
-            updateSpinDisplay();
-        }
 
         showInstructions();
         updateSpinDisplay();
@@ -456,6 +476,7 @@ Click "Start" to use your spin!`;
                     <input type="hidden" name="amount" value="${amount}">
                     <input type="hidden" name="points" value="${points}">
                     <input type="hidden" name="spins_used" value="${spinsUsed}">
+                    <input type="hidden" name="total_spins" value="${MAX_SPINS}">
                     
                     <label>Full Name: 
                         <input type="text" name="full_name" required placeholder="e.g., John Doe">
@@ -553,7 +574,7 @@ Click "Start" to use your spin!`;
                         <h3>🎉 SUCCESS!</h3>
                         <p>Thank you, <strong>${fullName}</strong>!</p>
                         <p>Your <strong>${amount} ${prizeType}</strong> has been submitted!</p>
-                        <p>✅ Spin used. No more spins allowed.</p>
+                        <p>Spins used: <strong>${spinsUsed}/2</strong></p>
                         <button id="closeSuccess" style="width: 100%; padding: 12px; margin-top: 15px;">Close</button>
                     </div>
                 `;
@@ -587,12 +608,14 @@ Click "Start" to use your spin!`;
             }
         });
 
-        // ✅ FIXED SPIN HANDLER - 1 SPIN ONLY
+        // ✅ FIXED SPIN HANDLER - FREE SPIN GIVES EXTRA!
         const spinHandler = debounce(() => {
             if (spinning || spinsLeft === 0) return;
             
-            // ✅ USE SPIN IMMEDIATELY
-            useSpin();
+            // ✅ USE SPIN (except for free spin award)
+            if (spinsUsed < 1 || spinsLeft > 1) { // Don't use spin if already on free spin
+                useSpin();
+            }
             
             spinning = true;
             spinBtn.disabled = true;
@@ -627,12 +650,13 @@ Click "Start" to use your spin!`;
                     const winIndex = Math.floor(relativeAngle / deg) % numSegments;
                     const result = currentSegments[winIndex];
 
-                    // ✅ FREE SPIN ALSO USES THE 1 SPIN
+                    // ✅ FREE SPIN = EXTRA SPIN!
                     if (result === 'Free spin') {
-                        showModal('Congratulations! You got a Free Spin!\n⚠️ This uses your 1 spin!', 'congratulations');
-                        spinBtn.disabled = true; // Still blocks after free spin
+                        addFreeSpin(); // GIVES EXTRA SPIN
+                        showModal(`🎉 CONGRATULATIONS!\nYou won a FREE SPIN!\nSpins Left: ${spinsLeft}/2\nClick Spin for your EXTRA turn!`, 'congratulations');
+                        spinBtn.disabled = false;
                     } else if (result === 'Empty') {
-                        showModal('Oops, try again!\n⚠️ Your 1 spin is used.', 'oops');
+                        showModal(`Oops, try again!\nSpins Left: ${spinsLeft}/2`, 'oops');
                     } else if (result === 'Airtime') {
                         prizeType = 'Airtime';
                         isBallDrop = true;
