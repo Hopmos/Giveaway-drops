@@ -87,6 +87,8 @@
             font-size: 20px;
             margin-bottom: 15px;
             text-align: left;
+            line-height: 1.5;
+            white-space: pre-line;
         }
         #modalClose, #startBtn {
             padding: 8px 16px;
@@ -127,6 +129,8 @@
             font-size: 16px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            box-sizing: border-box;
+            pointer-events: auto;
         }
         form button {
             padding: 10px 20px;
@@ -220,19 +224,31 @@
         let points = 0;
         let hasSpun = false;
         let gameStartTime = 0;
-        const gameDuration = 10000; // 10 seconds in milliseconds
+        let startBallGame = false;
+        const gameDuration = 10000; // 10 seconds
 
         // Instructions text
         const instructionsText = `
-            Welcome to HOPMOS Giveaway Games!
-            - Spin the wheel once to win Airtime, Data, Cash, a Free Spin, or Empty.
-            - Free Spin: Spin again. Empty: Game ends.
-            - Airtime/Data/Cash: Tap falling balls for 10 seconds to earn points.
-            - Green balls: +2 points. 💣 Boom balls: -2 points.
-            - Prize: Points * 10 (Naira for Airtime/Cash, MB for Data).
-            - Submit a form with your details to claim your prize.
-            Click "Start" to begin!
-        `;
+Welcome to HOPMOS Giveaway Games!
+How to Play:
+1. Spin the Wheel
+   - Spin once to win: Airtime, Data, Cash, Free Spin, or Empty.
+2. Wheel Outcomes
+   - Free Spin: Spin again for another chance.
+   - Empty: Game ends.
+   - Airtime/Data/Cash: Play the ball-dropping game.
+3. Ball-Dropping Game
+   - Tap falling balls for 10 seconds to earn points:
+     - Green Balls: +2 points
+     - Boom Balls (💣): -2 points
+4. Prize Calculation
+   - Prize = Points × 10
+     - Airtime/Cash: Value in Naira (₦)
+     - Data: Value in Megabytes (MB)
+5. Claim Your Prize
+   - Submit a form with your details to receive your prize.
+Click "Start" to begin!
+`;
 
         // Show instructions on page load
         function showInstructions() {
@@ -244,10 +260,8 @@
             startBtn.style.display = 'inline-block';
         }
 
-        // Show instructions when button clicked
         instructionsBtn.addEventListener('click', showInstructions);
 
-        // Start game on clicking "Start"
         startBtn.addEventListener('click', () => {
             modal.style.display = 'none';
             overlay.style.display = 'none';
@@ -256,7 +270,6 @@
             spinBtn.disabled = false;
         });
 
-        // Show instructions on page load
         showInstructions();
 
         // Debounce function
@@ -280,7 +293,7 @@
             centerX = canvas.width / 2;
             centerY = canvas.height / 2;
             radius = Math.min(centerX, centerY) - 10;
-            if (isBallDrop) {
+            if (isBallDrop && startBallGame) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 animateBalls();
             } else {
@@ -351,6 +364,7 @@
             numSegments = currentSegments.length;
             deg = 360 / numSegments;
             isBallDrop = false;
+            startBallGame = false;
             currentAngle = 0;
             balls = [];
             popUps = [];
@@ -376,36 +390,62 @@
 
         function showForm(amount) {
             prizeAmount = amount;
-            let formHtml = `<p>Congratulations! You won ${amount} for ${prizeType}!</p>
-                <form id="win-form" name="win-form" method="POST" data-netlify="true">
+            console.log(`Showing form with prize: ${amount}, points: ${points}`); // Debug log
+
+            // Create form HTML dynamically
+            let formHtml = `
+                <p>Congratulations! You won ${amount} for ${prizeType}!</p>
+                <form id="win-form" name="win-form" method="POST" action="/" data-netlify="true" data-netlify-recaptcha="true">
                     <input type="hidden" name="form-name" value="win-form">
                     <input type="hidden" name="prize_type" value="${prizeType}">
                     <input type="hidden" name="amount" value="${amount}">
-                    <label>Full Name: <input type="text" name="full_name" required></label><br>`;
+                    <label>Full Name: <input type="text" name="full_name" required placeholder="e.g., John Doe"></label>
+                    <br>`;
+            
             if (prizeType === 'Airtime' || prizeType === 'Data') {
-                formHtml += `<label>Phone Number: <input type="text" name="phone_number" required></label><br>
-                    <label>Network: <select name="network" required>
-                        <option value="MTN">MTN</option>
-                        <option value="AIRTEL">AIRTEL</option>
-                        <option value="GLO">GLO</option>
-                    </select></label><br>`;
+                formHtml += `
+                    <label>Phone Number: <input type="tel" name="phone_number" pattern="[0-9]{10,11}" required placeholder="e.g., 08012345678"></label>
+                    <br>
+                    <label>Network: 
+                        <select name="network" required>
+                            <option value="" disabled selected>Select Network</option>
+                            <option value="MTN">MTN</option>
+                            <option value="AIRTEL">AIRTEL</option>
+                            <option value="GLO">GLO</option>
+                        </select>
+                    </label>
+                    <br>`;
             } else if (prizeType === 'Cash') {
-                formHtml += `<label>Bank Name: <input type="text" name="bank_name" required></label><br>
-                    <label>Account Number: <input type="text" name="account_number" required></label><br>`;
+                formHtml += `
+                    <label>Bank Name: <input type="text" name="bank_name" required placeholder="e.g., First Bank"></label>
+                    <br>
+                    <label>Account Number: <input type="text" name="account_number" pattern="[0-9]{10}" required placeholder="e.g., 1234567890"></label>
+                    <br>`;
             }
-            formHtml += `<button type="submit">Submit</button></form>`;
+            
+            formHtml += `
+                    <div data-netlify-recaptcha="true"></div>
+                    <button type="submit">Submit</button>
+                </form>`;
+            
             modalMessage.innerHTML = formHtml;
             modal.className = 'congratulations';
             modal.style.display = 'block';
             overlay.style.display = 'block';
 
+            // Handle form submission
             const form = document.getElementById('win-form');
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                
+                // Collect form data
                 const formData = new FormData(form);
                 const data = {};
                 formData.forEach((value, key) => (data[key] = value));
+                
+                // Encode form data for Netlify
                 const encoded = new URLSearchParams(data).toString();
+                console.log(`Form data to submit: ${encoded}`); // Debug log
 
                 try {
                     const response = await fetch('/', {
@@ -413,19 +453,29 @@
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: encoded
                     });
+
                     if (response.ok) {
-                        modalMessage.innerHTML = `Thank you, ${data.full_name}! Your submission for ${amount} ${prizeType} has been received!`;
+                        modalMessage.innerHTML = `Thank you, ${data.full_name}! Your submission for ${amount} ${prizeType} has been received! We'll process your request soon.`;
                         modal.className = 'congratulations';
                         hasSpun = true;
                         spinBtn.disabled = true;
                     } else {
-                        modalMessage.innerHTML = 'Submission failed. Please try again.';
+                        modalMessage.innerHTML = `Submission failed. Please try again later. (Status: ${response.status})`;
                         modal.className = 'oops';
+                        console.error(`Form submission failed with status: ${response.status}`);
                     }
                 } catch (error) {
-                    modalMessage.innerHTML = 'Submission failed. Please try again.';
+                    modalMessage.innerHTML = 'Submission failed due to a network error. Please check your connection and try again.';
                     modal.className = 'oops';
+                    console.error('Form submission error:', error);
                 }
+            });
+
+            // Log input interactions for debugging
+            const inputs = form.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('focus', () => console.log(`Input focused: ${input.name}`));
+                input.addEventListener('input', (e) => console.log(`Input changed: ${input.name} = ${e.target.value}`));
             });
         }
 
@@ -433,6 +483,15 @@
             modal.style.display = 'none';
             overlay.style.display = 'none';
             spinBtn.disabled = hasSpun || spinning;
+
+            // Start ball game timer when closing ball game instructions
+            if (isBallDrop && modalMessage.textContent.includes('Tap the dropping balls')) {
+                startBallGame = true;
+                gameStartTime = performance.now();
+                animateBalls();
+                canvas.addEventListener('click', handleBallTap);
+            }
+
             if (isBallDrop && (modalMessage.innerHTML.includes('Congratulations') || modalMessage.innerHTML.includes('Thank you'))) {
                 resetWheel();
             } else if (modalMessage.textContent.includes('Oops')) {
@@ -491,12 +550,9 @@
                         balls = [];
                         popUps = [];
                         points = 0;
-                        gameStartTime = performance.now();
                         spinBtn.textContent = 'Tap Balls';
                         showModal('Tap the dropping balls for 10 seconds to win your Airtime amount!', 'congratulations');
                         spinBtn.disabled = false;
-                        animateBalls();
-                        canvas.addEventListener('click', handleBallTap);
                     } else if (result === 'Data') {
                         prizeType = 'Data';
                         isBallDrop = true;
@@ -504,12 +560,9 @@
                         balls = [];
                         popUps = [];
                         points = 0;
-                        gameStartTime = performance.now();
                         spinBtn.textContent = 'Tap Balls';
                         showModal('Tap the dropping balls for 10 seconds to win your Data amount!', 'congratulations');
                         spinBtn.disabled = false;
-                        animateBalls();
-                        canvas.addEventListener('click', handleBallTap);
                     } else if (result === 'Cash') {
                         prizeType = 'Cash';
                         isBallDrop = true;
@@ -517,12 +570,9 @@
                         balls = [];
                         popUps = [];
                         points = 0;
-                        gameStartTime = performance.now();
                         spinBtn.textContent = 'Tap Balls';
                         showModal('Tap the dropping balls for 10 seconds to win your Cash amount!', 'congratulations');
                         spinBtn.disabled = false;
-                        animateBalls();
-                        canvas.addEventListener('click', handleBallTap);
                     }
                 }
             }
@@ -557,7 +607,7 @@
         }
 
         function animateBalls() {
-            if (!isBallDrop) return;
+            if (!isBallDrop || !startBallGame) return;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -566,11 +616,13 @@
             if (elapsed >= gameDuration) {
                 canvas.removeEventListener('click', handleBallTap);
                 const prizeValue = points * 10;
+                console.log(`Game ended. Points: ${points}, Prize: ${prizeValue}`); // Debug log
                 let win = prizeType === 'Data' ? `${prizeValue}MB` : `₦${prizeValue}`;
                 showForm(win);
                 balls = [];
                 popUps = [];
-                points = 0;
+                points = 0; // Reset after showing form
+                startBallGame = false;
                 return;
             }
 
@@ -629,17 +681,23 @@
             const clickY = event.clientY - rect.top;
 
             let newBalls = [];
+            let tapped = false;
             balls.forEach(ball => {
                 const dist = Math.sqrt((clickX - ball.x) ** 2 + (clickY - ball.y) ** 2);
                 if (dist < ball.radius * 1.2) {
+                    tapped = true;
                     const delta = ball.isBoom ? -2 : 2;
                     points += delta;
                     popUps.push({x: ball.x, y: ball.y, alpha: 1, text: delta > 0 ? '+' + delta : delta, isBoom: ball.isBoom});
+                    console.log(`Ball tapped: ${ball.isBoom ? 'Boom' : 'Regular'}, Points: ${points}`); // Debug log
                 } else {
                     newBalls.push(ball);
                 }
             });
             balls = newBalls;
+            if (tapped) {
+                console.log(`Current points after tap: ${points}`);
+            }
         }
 
         spinBtn.addEventListener('click', spinHandler);
