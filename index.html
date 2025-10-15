@@ -76,6 +76,7 @@
             z-index: 1000;
             max-width: 90%;
             width: 400px;
+            max-height: 80vh; /* Limit modal height */
         }
         #modal.congratulations {
             animation: fadeIn 0.5s ease-in;
@@ -89,6 +90,9 @@
             text-align: left;
             line-height: 1.5;
             white-space: pre-line;
+            max-height: 60vh; /* Limit message height */
+            overflow-y: auto; /* Add scrollbar */
+            padding-right: 10px; /* Space for scrollbar */
         }
         #modalClose, #startBtn {
             padding: 8px 16px;
@@ -408,7 +412,7 @@ Click "Start" to begin!`;
             let unit = prizeType === 'Data' ? 'MB' : '₦';
             let formHtml = `
                 <p>Congratulations! You won ${amount}${unit} for ${prizeType}!</p>
-                <form id="win-form" name="win-form" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+                <form id="win-form" name="win-form" method="POST" data-netlify="true" data-netlify-honeypot="bot-field">
                     <input type="hidden" name="form-name" value="win-form">
                     <input type="hidden" name="prize_type" value="${prizeType}">
                     <input type="hidden" name="amount" value="${amount}">
@@ -451,6 +455,7 @@ Click "Start" to begin!`;
                 const data = {};
                 formData.forEach((value, key) => (data[key] = value));
                 const encoded = new URLSearchParams(data).toString();
+                console.log('Submitting form:', encoded); // Debug log
 
                 try {
                     const response = await fetch('/', {
@@ -458,6 +463,7 @@ Click "Start" to begin!`;
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: encoded
                     });
+                    console.log('Response status:', response.status); // Debug log
                     if (response.ok) {
                         localStorage.setItem('hasParticipated', 'true');
                         hasSpun = true;
@@ -465,11 +471,12 @@ Click "Start" to begin!`;
                         modal.className = 'congratulations';
                         spinBtn.disabled = true;
                     } else {
-                        modalMessage.innerHTML = 'Submission failed. Please try again.';
+                        modalMessage.innerHTML = `Submission failed with status ${response.status}. Please try again.`;
                         modal.className = 'oops';
+                        console.error('Submission failed:', response.statusText);
                     }
                 } catch (error) {
-                    modalMessage.innerHTML = 'Submission failed. Please try again.';
+                    modalMessage.innerHTML = 'Submission failed due to a network error. Please try again.';
                     modal.className = 'oops';
                     console.error('Form submission error:', error);
                 }
