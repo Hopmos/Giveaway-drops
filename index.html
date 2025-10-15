@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -84,102 +83,100 @@
         #modal.oops {
             animation: shake 0.5s ease-in;
         }
-       
-#modalMessage {
-font-size: 20px;
-margin-bottom: 15px;
-text-align: left;
-line-height: 1.5; /* Added for better readability */
-white-space: pre-line; /* Ensures line breaks are preserved */}    #modalClose, #startBtn {
-        padding: 8px 16px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        margin-top: 10px;
-    }
-    #modalClose:hover, #startBtn:hover {
-        background-color: #45a049;
-    }
-    #overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 999;
-    }
-    form {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        align-items: center;
-    }
-    form label {
-        width: 100%;
-        text-align: left;
-        margin-bottom: 5px;
-    }
-    form input, form select {
-        width: 100%;
-        padding: 8px;
-        font-size: 16px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        box-sizing: border-box;
-        pointer-events: auto;
-    }
-    form button {
-        padding: 10px 20px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-    form button:hover {
-        background-color: #45a049;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translate(-50%, -60%); }
-        to { opacity: 1; transform: translate(-50%, -50%); }
-    }
-    @keyframes shake {
-        0%, 100% { transform: translate(-50%, -50%); }
-        25% { transform: translate(-55%, -50%); }
-        75% { transform: translate(-45%, -50%); }
-    }
-    @media (max-width: 600px) {
-        .logo {
-            max-width: 150px;
-        }
-        h1 {
-            font-size: 1.8em;
-        }
-        #instructionsBtn {
-            font-size: 14px;
-            padding: 6px 12px;
-        }
-        #wheel {
-            width: 300px;
-            height: 300px;
-        }
-        #spinBtn {
-            font-size: 16px;
-            padding: 8px 16px;
-        }
-        #modal {
-            width: 80%;
-            padding: 15px;
-        }
         #modalMessage {
-            font-size: 18px;
+            font-size: 20px;
+            margin-bottom: 15px;
+            text-align: left;
         }
-    }
-</style></head>
+        #modalClose, #startBtn {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        #modalClose:hover, #startBtn:hover {
+            background-color: #45a049;
+        }
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+        form label {
+            width: 100%;
+            text-align: left;
+            margin-bottom: 5px;
+        }
+        form input, form select {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        form button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #45a049;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%); }
+            25% { transform: translate(-55%, -50%); }
+            75% { transform: translate(-45%, -50%); }
+        }
+        @media (max-width: 600px) {
+            .logo {
+                max-width: 150px;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            #instructionsBtn {
+                font-size: 14px;
+                padding: 6px 12px;
+            }
+            #wheel {
+                width: 300px;
+                height: 300px;
+            }
+            #spinBtn {
+                font-size: 16px;
+                padding: 8px 16px;
+            }
+            #modal {
+                width: 80%;
+                padding: 15px;
+            }
+            #modalMessage {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
 <body>
     <img src="https://raw.githubusercontent.com/hopmos/webimage/main/Hopmoslogo.png" alt="HOPMOS Giveaway Logo" class="logo">
     <h1>GIVEAWAY GAMES</h1>
@@ -193,433 +190,459 @@ white-space: pre-line; /* Ensures line breaks are preserved */}    #modalClose, 
         <button id="startBtn" style="display: none;">Start</button>
     </div>
 
-<script>
-    const canvas = document.getElementById('wheel');
-    const ctx = canvas.getContext('2d');
-    const spinBtn = document.getElementById('spinBtn');
-    const instructionsBtn = document.getElementById('instructionsBtn');
-    const modal = document.getElementById('modal');
-    const overlay = document.getElementById('overlay');
-    const modalMessage = document.getElementById('modalMessage');
-    const modalClose = document.getElementById('modalClose');
-    const startBtn = document.getElementById('startBtn');
+    <script>
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
+        const instructionsBtn = document.getElementById('instructionsBtn');
+        const modal = document.getElementById('modal');
+        const overlay = document.getElementById('overlay');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalClose = document.getElementById('modalClose');
+        const startBtn = document.getElementById('startBtn');
 
-    const segments = ['Airtime', 'Empty', 'Data', 'Empty', 'Cash', 'Free spin'];
-    const colors = ['#FF6347', '#A9A9A9', '#4682B4', '#D3D3D3', '#32CD32', '#FFD700'];
-    let currentSegments = segments;
-    let numSegments = currentSegments.length;
-    let deg = 360 / numSegments;
-    let centerX = canvas.width / 2;
-    let centerY = canvas.height / 2;
-    let radius = Math.min(centerX, centerY) - 10;
+        const segments = ['Airtime', 'Empty', 'Data', 'Empty', 'Cash', 'Free spin'];
+        const colors = ['#FF6347', '#A9A9A9', '#4682B4', '#D3D3D3', '#32CD32', '#FFD700'];
+        let currentSegments = segments;
+        let numSegments = currentSegments.length;
+        let deg = 360 / numSegments;
+        let centerX = canvas.width / 2;
+        let centerY = canvas.height / 2;
+        let radius = Math.min(centerX, centerY) - 10;
 
-    let currentAngle = 0;
-    let spinning = false;
-    let isBallDrop = false;
-    let prizeType = '';
-    let prizeAmount = 0;
-    let balls = [];
-    let popUps = [];
-    let points = 0;
-    let hasSpun = false;
-    let gameStartTime = 0;
-    let startBallGame = false; // Flag to delay ball game start
-    const gameDuration = 10000; // 10 seconds
+        let currentAngle = 0;
+        let spinning = false;
+        let isBallDrop = false;
+        let prizeType = '';
+        let prizeAmount = 0;
+        let balls = [];
+        let popUps = [];
+        let points = 0;
+        let hasSpun = false;
+        let gameStartTime = 0;
+        const gameDuration = 10000; // 10 seconds in milliseconds
 
-    // Instructions text
-    const instructionsText = `Welcome to HOPMOS Giveaway Games!
-How to Play:Spin the WheelSpin once to win: Airtime, Data, Cash, Free Spin, or Empty.
+        // Instructions text
+        const instructionsText = `
+            Welcome to HOPMOS Giveaway Games!
+            - Spin the wheel once to win Airtime, Data, Cash, a Free Spin, or Empty.
+            - Free Spin: Spin again. Empty: Game ends.
+            - Airtime/Data/Cash: Tap falling balls for 10 seconds to earn points.
+            - Green balls: +2 points. 💣 Boom balls: -2 points.
+            - Prize: Points * 10 (Naira for Airtime/Cash, MB for Data).
+            - Submit a form with your details to claim your prize.
+            Click "Start" to begin!
+        `;
 
-Wheel OutcomesFree Spin: Spin again for another chance.
-Empty: Game ends.
-Airtime/Data/Cash: Play the ball-dropping game.
+        // Show instructions on page load
+        function showInstructions() {
+            modalMessage.textContent = instructionsText;
+            modal.className = 'congratulations';
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
+            modalClose.style.display = 'none';
+            startBtn.style.display = 'inline-block';
+        }
 
-Ball-Dropping GameTap falling balls for 10 seconds to earn points:Green Balls: +2 points
-Boom Balls (): -2 points
+        // Show instructions when button clicked
+        instructionsBtn.addEventListener('click', showInstructions);
 
-Prize CalculationPrize = Points × 10Airtime/Cash: Value in Naira (₦)
-Data: Value in Megabytes (MB)
+        // Start game on clicking "Start"
+        startBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+            overlay.style.display = 'none';
+            modalClose.style.display = 'inline-block';
+            startBtn.style.display = 'none';
+            spinBtn.disabled = false;
+        });
 
-Claim Your PrizeSubmit a form with your details to receive your prize.
-Click "Start" to begin!
-`;   // Show instructions on page load
-   function showInstructions() {
-   modalMessage.textContent = instructionsText;
-   modal.className = 'congratulations';
-   modal.style.display = 'block';
-   overlay.style.display = 'block';
-   modalClose.style.display = 'none';
-   startBtn.style.display = 'inline-block';
-   }   instructionsBtn.addEventListener('click', showInstructions);   startBtn.addEventListener('click', () => {
-   modal.style.display = 'none';
-   overlay.style.display = 'none';
-   modalClose.style.display = 'inline-block';
-   startBtn.style.display = 'none';
-   spinBtn.disabled = false;
-   });   showInstructions();   // Debounce function
-   function debounce(func, wait) {
-   let timeout;
-   return function (...args) {
-       clearTimeout(timeout);
-       timeout = setTimeout(() => func.apply(this, args), wait);
-   };
-   }   // Adjust canvas size
-   function resizeCanvas() {
-   if (window.innerWidth <= 600) {
-       canvas.width = 300;
-       canvas.height = 300;
-   } else {
-       canvas.width = 400;
-       canvas.height = 400;
-   }
-   centerX = canvas.width / 2;
-   centerY = canvas.height / 2;
-   radius = Math.min(centerX, centerY) - 10;
-   if (isBallDrop && startBallGame) {
-       ctx.clearRect(0, 0, canvas.width, canvas.height);
-       animateBalls();
-   } else {
-       drawWheel();
-   }
-   }   window.addEventListener('resize', resizeCanvas);
-   resizeCanvas();   function drawSegments() {
-   for (let i = 0; i < numSegments; i++) {
-       const startAngle = i * deg * Math.PI / 180;
-       const endAngle = (i + 1) * deg * Math.PI / 180;
+        // Show instructions on page load
+        showInstructions();
 
-       ctx.beginPath();
-       ctx.moveTo(centerX, centerY);
-       ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-       ctx.closePath();
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
 
-       ctx.fillStyle = colors[i];
-       ctx.fill();
-       ctx.strokeStyle = '#333';
-       ctx.lineWidth = 2;
-       ctx.stroke();
+        // Adjust canvas size
+        function resizeCanvas() {
+            if (window.innerWidth <= 600) {
+                canvas.width = 300;
+                canvas.height = 300;
+            } else {
+                canvas.width = 400;
+                canvas.height = 400;
+            }
+            centerX = canvas.width / 2;
+            centerY = canvas.height / 2;
+            radius = Math.min(centerX, centerY) - 10;
+            if (isBallDrop) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                animateBalls();
+            } else {
+                drawWheel();
+            }
+        }
 
-       const textAngle = startAngle + (endAngle - startAngle) / 2;
-       const textX = centerX + (radius / 1.4) * Math.cos(textAngle);
-       const textY = centerY + (radius / 1.4) * Math.sin(textAngle);
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
 
-       ctx.save();
-       ctx.translate(textX, textY);
-       ctx.rotate(textAngle + Math.PI / 2);
-       ctx.fillStyle = '#000';
-       ctx.font = 'bold 16px Arial';
-       ctx.textAlign = 'center';
-       ctx.textBaseline = 'middle';
-       ctx.fillText(currentSegments[i], 0, 0);
-       ctx.restore();
-   }
-   }   function drawPointer() {
-   ctx.beginPath();
-   ctx.moveTo(centerX - 20, 10);
-   ctx.lineTo(centerX + 20, 10);
-   ctx.lineTo(centerX, 40);
-   ctx.closePath();
-   ctx.fillStyle = '#FF0000';
-   ctx.fill();
-   ctx.strokeStyle = '#333';
-   ctx.stroke();
-   }   function drawWheel() {
-   ctx.clearRect(0, 0, canvas.width, canvas.height);
-   ctx.save();
-   ctx.translate(centerX, centerY);
-   ctx.rotate(currentAngle * Math.PI / 180);
-   ctx.translate(-centerX, -centerY);
-   drawSegments();
-   ctx.restore();
-   drawPointer();
-   }   function resetWheel() {
-   currentSegments = segments;
-   numSegments = currentSegments.length;
-   deg = 360 / numSegments;
-   isBallDrop = false;
-   startBallGame = false;
-   currentAngle = 0;
-   balls = [];
-   popUps = [];
-   points = 0;
-   prizeType = '';
-   prizeAmount = 0;
-   spinBtn.textContent = 'Spin';
-   canvas.removeEventListener('click', handleBallTap);
-   drawWheel();
-   if (hasSpun) {
-       spinBtn.disabled = true;
-   }
-   }   function showModal(message, type) {
-   modalMessage.textContent = message;
-   modal.className = type;
-   modal.style.display = 'block';
-   overlay.style.display = 'block';
-   modalClose.style.display = 'inline-block';
-   startBtn.style.display = 'none';
-   }   function showForm(amount) {
-   prizeAmount = amount;
-   console.log(Showing form with prize: ${amount}, points: ${points}); // Debug log
-   let formHtml = <p>Congratulations! You won ${amount} for ${prizeType}!</p>        <form id="win-form" name="win-form" method="POST" data-netlify="true">            <input type="hidden" name="form-name" value="win-form">            <input type="hidden" name="prize_type" value="${prizeType}">            <input type="hidden" name="amount" value="${amount}">            <label>Full Name: <input type="text" name="full_name" required></label><br>;
-   if (prizeType === 'Airtime' || prizeType === 'Data') {
-       formHtml += <label>Phone Number: <input type="text" name="phone_number" required></label><br>            <label>Network: <select name="network" required>                <option value="MTN">MTN</option>                <option value="AIRTEL">AIRTEL</option>                <option value="GLO">GLO</option>            </select></label><br>;
-   } else if (prizeType === 'Cash') {
-       formHtml += <label>Bank Name: <input type="text" name="bank_name" required></label><br>            <label>Account Number: <input type="text" name="account_number" required></label><br>;
-   }
-   formHtml += <button type="submit">Submit</button></form>;
-   modalMessage.innerHTML = formHtml;
-   modal.className = 'congratulations';
-   modal.style.display = 'block';
-   overlay.style.display = 'block';
+        function drawSegments() {
+            for (let i = 0; i < numSegments; i++) {
+                const startAngle = i * deg * Math.PI / 180;
+                const endAngle = (i + 1) * deg * Math.PI / 180;
 
-   const form = document.getElementById('win-form');
-   form.addEventListener('submit', async (e) => {
-       e.preventDefault();
-       const formData = new FormData(form);
-       const data = {};
-       formData.forEach((value, key) => (data[key] = value));
-       const encoded = new URLSearchParams(data).toString();
-       console.log(Form submitted: ${encoded}); // Debug log
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
 
-       try {
-           const response = await fetch('/', {
-               method: 'POST',
-               headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-               body: encoded
-           });
-           if (response.ok) {
-               modalMessage.innerHTML = Thank you, ${data.full_name}! Your submission for ${amount} ${prizeType} has been received!;
-               modal.className = 'congratulations';
-               hasSpun = true;
-               spinBtn.disabled = true;
-           } else {
-               modalMessage.innerHTML = 'Submission failed. Please try again.';
-               modal.className = 'oops';
-           }
-       } catch (error) {
-           modalMessage.innerHTML = 'Submission failed. Please try again.';
-           modal.className = 'oops';
-           console.error('Form submission error:', error); // Debug log
-       }
-   });
+                ctx.fillStyle = colors[i];
+                ctx.fill();
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.stroke();
 
-   // Ensure inputs are focusable
-   const inputs = form.querySelectorAll('input, select');
-   inputs.forEach(input => {
-       input.addEventListener('focus', () => console.log(Input focused: ${input.name}));
-       input.addEventListener('input', (e) => console.log(Input changed: ${input.name} = ${e.target.value}));
-   });
-   }   modalClose.addEventListener('click', () => {
-   modal.style.display = 'none';
-   overlay.style.display = 'none';
-   spinBtn.disabled = hasSpun || spinning;
+                const textAngle = startAngle + (endAngle - startAngle) / 2;
+                const textX = centerX + (radius / 1.4) * Math.cos(textAngle);
+                const textY = centerY + (radius / 1.4) * Math.sin(textAngle);
 
-   // Start ball game timer when closing ball game instructions
-   if (isBallDrop && modalMessage.textContent.includes('Tap the dropping balls')) {
-       startBallGame = true;
-       gameStartTime = performance.now();
-       animateBalls();
-       canvas.addEventListener('click', handleBallTap);
-   }
+                ctx.save();
+                ctx.translate(textX, textY);
+                ctx.rotate(textAngle + Math.PI / 2);
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(currentSegments[i], 0, 0);
+                ctx.restore();
+            }
+        }
 
-   if (isBallDrop && (modalMessage.innerHTML.includes('Congratulations') || modalMessage.innerHTML.includes('Thank you'))) {
-       resetWheel();
-   } else if (modalMessage.textContent.includes('Oops')) {
-       hasSpun = true;
-       spinBtn.disabled = true;
-       resetWheel();
-   }
-   });   const spinHandler = debounce(() => {
-   if (spinning || hasSpun) return;
-   spinning = true;
-   hasSpun = true;
-   spinBtn.disabled = true;
-   currentAngle = 0;
-   drawWheel();
+        function drawPointer() {
+            ctx.beginPath();
+            ctx.moveTo(centerX - 20, 10);
+            ctx.lineTo(centerX + 20, 10);
+            ctx.lineTo(centerX, 40);
+            ctx.closePath();
+            ctx.fillStyle = '#FF0000';
+            ctx.fill();
+            ctx.strokeStyle = '#333';
+            ctx.stroke();
+        }
 
-   const spinTime = Math.random() * 3000 + 2000; // 2-5s
-   const pointerAngle = 270; // Pointer at top
-   const spinDeg = Math.random() * 360 + 360 * (Math.floor(Math.random() * 5) + 5);
-   const finalNormalized = (spinDeg % 360 + 360) % 360;
+        function drawWheel() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(currentAngle * Math.PI / 180);
+            ctx.translate(-centerX, -centerY);
+            drawSegments();
+            ctx.restore();
+            drawPointer();
+        }
 
-   const startTime = performance.now();
+        function resetWheel() {
+            currentSegments = segments;
+            numSegments = currentSegments.length;
+            deg = 360 / numSegments;
+            isBallDrop = false;
+            currentAngle = 0;
+            balls = [];
+            popUps = [];
+            points = 0;
+            prizeType = '';
+            prizeAmount = 0;
+            spinBtn.textContent = 'Spin';
+            canvas.removeEventListener('click', handleBallTap);
+            drawWheel();
+            if (hasSpun) {
+                spinBtn.disabled = true;
+            }
+        }
 
-   function animate(time) {
-       const elapsed = time - startTime;
-       const progress = Math.min(elapsed / spinTime, 1);
-       const easeOut = 1 - Math.pow(1 - progress, 5);
-       currentAngle = spinDeg * easeOut;
+        function showModal(message, type) {
+            modalMessage.textContent = message;
+            modal.className = type;
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
+            modalClose.style.display = 'inline-block';
+            startBtn.style.display = 'none';
+        }
 
-       drawWheel();
+        function showForm(amount) {
+            prizeAmount = amount;
+            let formHtml = `<p>Congratulations! You won ${amount} for ${prizeType}!</p>
+                <form id="win-form" name="win-form" method="POST" data-netlify="true">
+                    <input type="hidden" name="form-name" value="win-form">
+                    <input type="hidden" name="prize_type" value="${prizeType}">
+                    <input type="hidden" name="amount" value="${amount}">
+                    <label>Full Name: <input type="text" name="full_name" required></label><br>`;
+            if (prizeType === 'Airtime' || prizeType === 'Data') {
+                formHtml += `<label>Phone Number: <input type="text" name="phone_number" required></label><br>
+                    <label>Network: <select name="network" required>
+                        <option value="MTN">MTN</option>
+                        <option value="AIRTEL">AIRTEL</option>
+                        <option value="GLO">GLO</option>
+                    </select></label><br>`;
+            } else if (prizeType === 'Cash') {
+                formHtml += `<label>Bank Name: <input type="text" name="bank_name" required></label><br>
+                    <label>Account Number: <input type="text" name="account_number" required></label><br>`;
+            }
+            formHtml += `<button type="submit">Submit</button></form>`;
+            modalMessage.innerHTML = formHtml;
+            modal.className = 'congratulations';
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
 
-       if (progress < 1) {
-           requestAnimationFrame(animate);
-       } else {
-           currentAngle = finalNormalized;
-           drawWheel();
+            const form = document.getElementById('win-form');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = {};
+                formData.forEach((value, key) => (data[key] = value));
+                const encoded = new URLSearchParams(data).toString();
 
-           spinning = false;
-           const normalizedAngle = finalNormalized;
-           const relativeAngle = (pointerAngle - normalizedAngle + 720) % 360;
-           const winIndex = Math.floor(relativeAngle / deg) % numSegments;
-           const result = currentSegments[winIndex];
+                try {
+                    const response = await fetch('/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: encoded
+                    });
+                    if (response.ok) {
+                        modalMessage.innerHTML = `Thank you, ${data.full_name}! Your submission for ${amount} ${prizeType} has been received!`;
+                        modal.className = 'congratulations';
+                        hasSpun = true;
+                        spinBtn.disabled = true;
+                    } else {
+                        modalMessage.innerHTML = 'Submission failed. Please try again.';
+                        modal.className = 'oops';
+                    }
+                } catch (error) {
+                    modalMessage.innerHTML = 'Submission failed. Please try again.';
+                    modal.className = 'oops';
+                }
+            });
+        }
 
-           if (result === 'Free spin') {
-               showModal('Congratulations! You got a Free Spin! Spin the first wheel again!', 'congratulations');
-               hasSpun = false;
-               spinBtn.disabled = false;
-           } else if (result === 'Empty') {
-               showModal('Oops, try again!', 'oops');
-               spinBtn.disabled = true;
-           } else if (result === 'Airtime') {
-               prizeType = 'Airtime';
-               isBallDrop = true;
-               currentAngle = 0;
-               balls = [];
-               popUps = [];
-               points = 0;
-               spinBtn.textContent = 'Tap Balls';
-               showModal('Tap the dropping balls for 10 seconds to win your Airtime amount!', 'congratulations');
-               spinBtn.disabled = false;
-           } else if (result === 'Data') {
-               prizeType = 'Data';
-               isBallDrop = true;
-               currentAngle = 0;
-               balls = [];
-               popUps = [];
-               points = 0;
-               spinBtn.textContent = 'Tap Balls';
-               showModal('Tap the dropping balls for 10 seconds to win your Data amount!', 'congratulations');
-               spinBtn.disabled = false;
-           } else if (result === 'Cash') {
-               prizeType = 'Cash';
-               isBallDrop = true;
-               currentAngle = 0;
-               balls = [];
-               popUps = [];
-               points = 0;
-               spinBtn.textContent = 'Tap Balls';
-               showModal('Tap the dropping balls for 10 seconds to win your Cash amount!', 'congratulations');
-               spinBtn.disabled = false;
-           }
-       }
-   }
+        modalClose.addEventListener('click', () => {
+            modal.style.display = 'none';
+            overlay.style.display = 'none';
+            spinBtn.disabled = hasSpun || spinning;
+            if (isBallDrop && (modalMessage.innerHTML.includes('Congratulations') || modalMessage.innerHTML.includes('Thank you'))) {
+                resetWheel();
+            } else if (modalMessage.textContent.includes('Oops')) {
+                hasSpun = true;
+                spinBtn.disabled = true;
+                resetWheel();
+            }
+        });
 
-   requestAnimationFrame(animate);
-   }, 100);   function generateBall() {
-   const isBoom = Math.random() < 0.3;
-   return {
-       x: Math.random() * canvas.width,
-       y: 0,
-       velY: isBoom ? (Math.random() * 3.5 + 1.5) : (Math.random() * 1.2 + 0.8),
-       radius: Math.random() > 0.5 ? 20 : 10,
-       color: isBoom ? 'transparent' : '#00FF00',
-       isBoom: isBoom
-   };
-   }   function drawBall(ball) {
-   if (!ball.isBoom) {
-       ctx.beginPath();
-       ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
-       ctx.fillStyle = ball.color;
-       ctx.fill();
-   } else {
-       ctx.font = ${ball.radius * 2}px Arial;
-       ctx.textAlign = 'center';
-       ctx.textBaseline = 'middle';
-       ctx.fillText('', ball.x, ball.y);
-   }
-   }   function animateBalls() {
-   if (!isBallDrop || !startBallGame) return;
+        const spinHandler = debounce(() => {
+            if (spinning || hasSpun) return;
+            spinning = true;
+            hasSpun = true;
+            spinBtn.disabled = true;
+            currentAngle = 0;
+            drawWheel();
 
-   ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const spinTime = Math.random() * 3000 + 2000; // 2-5s
+            const pointerAngle = 270; // Pointer at top
+            const spinDeg = Math.random() * 360 + 360 * (Math.floor(Math.random() * 5) + 5);
+            const finalNormalized = (spinDeg % 360 + 360) % 360;
 
-   const elapsed = performance.now() - gameStartTime;
-   const timeLeft = Math.max(0, gameDuration - elapsed) / 1000;
-   if (elapsed >= gameDuration) {
-       canvas.removeEventListener('click', handleBallTap);
-       const prizeValue = points * 10;
-       console.log(Game ended. Points: ${points}, Prize: ${prizeValue}); // Debug log
-       let win = prizeType === 'Data' ? ${prizeValue}MB : ₦${prizeValue};
-       showForm(win);
-       balls = [];
-       popUps = [];
-       points = 0; // Reset after showing form
-       startBallGame = false;
-       return;
-   }
+            const startTime = performance.now();
 
-   if (Math.random() < 0.1 && balls.length < 10) {
-       balls.push(generateBall());
-   }
+            function animate(time) {
+                const elapsed = time - startTime;
+                const progress = Math.min(elapsed / spinTime, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 5);
+                currentAngle = spinDeg * easeOut;
 
-   balls = balls.filter(ball => {
-       ball.y += ball.velY;
-       if (ball.y - ball.radius > canvas.height) {
-           return false;
-       }
-       drawBall(ball);
-       return true;
-   });
+                drawWheel();
 
-   popUps = popUps.filter(pop => {
-       pop.alpha -= 0.02;
-       pop.y -= 1;
-       if (pop.alpha <= 0) return false;
-       ctx.fillStyle = pop.isBoom ? rgba(255, 0, 0, ${pop.alpha}) : rgba(0, 255, 0, ${pop.alpha});
-       ctx.font = 'bold 20px Arial';
-       ctx.textAlign = 'center';
-       ctx.fillText(pop.text, pop.x, pop.y);
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    currentAngle = finalNormalized;
+                    drawWheel();
 
-       if (pop.isBoom) {
-           for (let i = 0; i < 5; i++) {
-               const fireRadius = Math.random() * 10 + 5;
-               const fireAngle = Math.random() * 2 * Math.PI;
-               const fireDist = Math.random() * 10;
-               const fireX = pop.x + fireDist * Math.cos(fireAngle);
-               const fireY = pop.y + fireDist * Math.sin(fireAngle);
-               ctx.beginPath();
-               ctx.arc(fireX, fireY, fireRadius, 0, 2 * Math.PI);
-               ctx.fillStyle = rgba(255, ${Math.random() * 100 + 155}, 0, ${pop.alpha});
-               ctx.fill();
-           }
-       }
+                    spinning = false;
+                    const normalizedAngle = finalNormalized;
+                    const relativeAngle = (pointerAngle - normalizedAngle + 720) % 360;
+                    const winIndex = Math.floor(relativeAngle / deg) % numSegments;
+                    const result = currentSegments[winIndex];
 
-       return true;
-   });
+                    if (result === 'Free spin') {
+                        showModal('Congratulations! You got a Free Spin! Spin the first wheel again!', 'congratulations');
+                        hasSpun = false;
+                        spinBtn.disabled = false;
+                    } else if (result === 'Empty') {
+                        showModal('Oops, try again!', 'oops');
+                        spinBtn.disabled = true;
+                    } else if (result === 'Airtime') {
+                        prizeType = 'Airtime';
+                        isBallDrop = true;
+                        currentAngle = 0;
+                        balls = [];
+                        popUps = [];
+                        points = 0;
+                        gameStartTime = performance.now();
+                        spinBtn.textContent = 'Tap Balls';
+                        showModal('Tap the dropping balls for 10 seconds to win your Airtime amount!', 'congratulations');
+                        spinBtn.disabled = false;
+                        animateBalls();
+                        canvas.addEventListener('click', handleBallTap);
+                    } else if (result === 'Data') {
+                        prizeType = 'Data';
+                        isBallDrop = true;
+                        currentAngle = 0;
+                        balls = [];
+                        popUps = [];
+                        points = 0;
+                        gameStartTime = performance.now();
+                        spinBtn.textContent = 'Tap Balls';
+                        showModal('Tap the dropping balls for 10 seconds to win your Data amount!', 'congratulations');
+                        spinBtn.disabled = false;
+                        animateBalls();
+                        canvas.addEventListener('click', handleBallTap);
+                    } else if (result === 'Cash') {
+                        prizeType = 'Cash';
+                        isBallDrop = true;
+                        currentAngle = 0;
+                        balls = [];
+                        popUps = [];
+                        points = 0;
+                        gameStartTime = performance.now();
+                        spinBtn.textContent = 'Tap Balls';
+                        showModal('Tap the dropping balls for 10 seconds to win your Cash amount!', 'congratulations');
+                        spinBtn.disabled = false;
+                        animateBalls();
+                        canvas.addEventListener('click', handleBallTap);
+                    }
+                }
+            }
 
-   ctx.fillStyle = '#000';
-   ctx.font = 'bold 20px Arial';
-   ctx.textAlign = 'left';
-   ctx.fillText(Points: ${points}, 10, 30);
-   ctx.textAlign = 'right';
-   ctx.fillText(Time: ${timeLeft.toFixed(1)}s, canvas.width - 10, 30);
+            requestAnimationFrame(animate);
+        }, 100);
 
-   requestAnimationFrame(animateBalls);
-   }   function handleBallTap(event) {
-   const rect = canvas.getBoundingClientRect();
-   const clickX = event.clientX - rect.left;
-   const clickY = event.clientY - rect.top;
+        function generateBall() {
+            const isBoom = Math.random() < 0.3;
+            return {
+                x: Math.random() * canvas.width,
+                y: 0,
+                velY: isBoom ? (Math.random() * 3.5 + 1.5) : (Math.random() * 1.2 + 0.8),
+                radius: Math.random() > 0.5 ? 20 : 10,
+                color: isBoom ? 'transparent' : '#00FF00',
+                isBoom: isBoom
+            };
+        }
 
-   let newBalls = [];
-   let tapped = false;
-   balls.forEach(ball => {
-       const dist = Math.sqrt((clickX - ball.x) ** 2 + (clickY - ball.y) ** 2);
-       if (dist < ball.radius * 1.2) {
-           tapped = true;
-           const delta = ball.isBoom ? -2 : 2;
-           points += delta;
-           popUps.push({x: ball.x, y: ball.y, alpha: 1, text: delta > 0 ? '+' + delta : delta, isBoom: ball.isBoom});
-           console.log(Ball tapped: ${ball.isBoom ? 'Boom' : 'Regular'}, Points: ${points}); // Debug log
-       } else {
-           newBalls.push(ball);
-       }
-   });
-   balls = newBalls;
-   if (tapped) {
-       console.log(Current points after tap: ${points});
-   }
-   }   spinBtn.addEventListener('click', spinHandler);
+        function drawBall(ball) {
+            if (!ball.isBoom) {
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
+                ctx.fillStyle = ball.color;
+                ctx.fill();
+            } else {
+                ctx.font = `${ball.radius * 2}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('💣', ball.x, ball.y);
+            }
+        }
 
- </script>
+        function animateBalls() {
+            if (!isBallDrop) return;
 
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const elapsed = performance.now() - gameStartTime;
+            const timeLeft = Math.max(0, gameDuration - elapsed) / 1000;
+            if (elapsed >= gameDuration) {
+                canvas.removeEventListener('click', handleBallTap);
+                const prizeValue = points * 10;
+                let win = prizeType === 'Data' ? `${prizeValue}MB` : `₦${prizeValue}`;
+                showForm(win);
+                balls = [];
+                popUps = [];
+                points = 0;
+                return;
+            }
+
+            if (Math.random() < 0.1 && balls.length < 10) {
+                balls.push(generateBall());
+            }
+
+            balls = balls.filter(ball => {
+                ball.y += ball.velY;
+                if (ball.y - ball.radius > canvas.height) {
+                    return false;
+                }
+                drawBall(ball);
+                return true;
+            });
+
+            popUps = popUps.filter(pop => {
+                pop.alpha -= 0.02;
+                pop.y -= 1;
+                if (pop.alpha <= 0) return false;
+                ctx.fillStyle = pop.isBoom ? `rgba(255, 0, 0, ${pop.alpha})` : `rgba(0, 255, 0, ${pop.alpha})`;
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(pop.text, pop.x, pop.y);
+
+                if (pop.isBoom) {
+                    for (let i = 0; i < 5; i++) {
+                        const fireRadius = Math.random() * 10 + 5;
+                        const fireAngle = Math.random() * 2 * Math.PI;
+                        const fireDist = Math.random() * 10;
+                        const fireX = pop.x + fireDist * Math.cos(fireAngle);
+                        const fireY = pop.y + fireDist * Math.sin(fireAngle);
+                        ctx.beginPath();
+                        ctx.arc(fireX, fireY, fireRadius, 0, 2 * Math.PI);
+                        ctx.fillStyle = `rgba(255, ${Math.random() * 100 + 155}, 0, ${pop.alpha})`;
+                        ctx.fill();
+                    }
+                }
+
+                return true;
+            });
+
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Points: ${points}`, 10, 30);
+            ctx.textAlign = 'right';
+            ctx.fillText(`Time: ${timeLeft.toFixed(1)}s`, canvas.width - 10, 30);
+
+            requestAnimationFrame(animateBalls);
+        }
+
+        function handleBallTap(event) {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const clickY = event.clientY - rect.top;
+
+            let newBalls = [];
+            balls.forEach(ball => {
+                const dist = Math.sqrt((clickX - ball.x) ** 2 + (clickY - ball.y) ** 2);
+                if (dist < ball.radius * 1.2) {
+                    const delta = ball.isBoom ? -2 : 2;
+                    points += delta;
+                    popUps.push({x: ball.x, y: ball.y, alpha: 1, text: delta > 0 ? '+' + delta : delta, isBoom: ball.isBoom});
+                } else {
+                    newBalls.push(ball);
+                }
+            });
+            balls = newBalls;
+        }
+
+        spinBtn.addEventListener('click', spinHandler);
+    </script>
 </body>
 </html>
