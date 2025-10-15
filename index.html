@@ -218,17 +218,16 @@
         <button id="startBtn" style="display: none;">Start</button>
     </div>
 
-    <script src="https://www.google.com/recaptcha/api.js?render=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></script>
+    <script src="https://www.google.com/recaptcha/api.js?render=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" async defer></script>
     
     <script>
-        // ✅ FIXED: BLOCK ONLY AFTER FORM SUBMISSION
         const SPIN_KEY = 'hopmos_spins_used';
         const FREE_SPIN_KEY = 'hopmos_free_spins_active';
         let spinsUsed = parseInt(localStorage.getItem(SPIN_KEY)) || 0;
         let freeSpinsActive = localStorage.getItem(FREE_SPIN_KEY) === 'true';
         const MAX_SPINS = 1;
         let spinsLeft = freeSpinsActive ? '∞' : (MAX_SPINS - spinsUsed);
-        let shouldBlockAfterForm = false; // ✅ NEW: DELAY BLOCKING
+        let gameCompleted = false; // ✅ NEW: Track if game is fully completed
 
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
@@ -287,36 +286,45 @@
             updateSpinDisplay();
         }
 
-        // ✅ FIXED: BLOCK ONLY AFTER FORM SUBMISSION
         function blockUser() {
             freeSpinsActive = false;
             spinsUsed = MAX_SPINS;
             spinsLeft = 0;
             localStorage.setItem(SPIN_KEY, spinsUsed);
             localStorage.removeItem(FREE_SPIN_KEY);
+            gameCompleted = true; // ✅ Mark as completed
             updateSpinDisplay();
             spinBtn.disabled = true;
             spinBtn.textContent = 'No Spins Left';
         }
 
+        function markGameComplete() {
+            gameCompleted = true;
+            blockUser();
+        }
+
         const instructionsText = `🎯 HOPMOS GIVEAWAY RULES:
 
-1️⃣ 1 SPIN PER USER
+1️⃣ 1 SPIN PER USER (Mandatory)
 
 2️⃣ FREE SPIN MAGIC:
-   • "Free Spin" = FREE EXTRA SPIN! 🎁
-   • Keep getting "Free Spin" = ♾️ UNLIMITED FREE!
-   • ANY OTHER = Complete game → BLOCKED
+   • Land on "Free Spin" = FREE EXTRA SPIN! 🎁
+   • Keep landing "Free Spin" = KEEP GETTING FREE SPINS! ♾️
+   • Land ANYTHING ELSE = Complete Ball Game + Form → THEN BLOCKED 🚫
 
-3️⃣ WIN FLOW (Airtime/Data/Cash):
-   • Spin → Ball Game (10s) → Form → THEN BLOCKED
+3️⃣ Ball Game (Airtime/Data/Cash):
+   • Tap green balls: +2 points
+   • Avoid 💣 boom balls: -2 points
+   • 10 seconds = Prize = Points × 10
 
 4️⃣ Examples:
-   • Spin → Free → Free → Cash → Ball Game → Form → BLOCKED
+   • Spin 1 → Free Spin → Spin 2 (FREE)
+   • Spin 2 → Cash → Ball Game → Submit Form → BLOCKED
+   • Spin 3 → Data → Ball Game → Submit Form → BLOCKED
 
-⚠️ You finish prize claim BEFORE blocking!
+⚠️ Block only AFTER full game completion!
 
-Click "Start"!`;
+Click "Start" to use your 1 spin!`;
 
         function showInstructions() {
             modalMessage.textContent = instructionsText;
@@ -375,18 +383,22 @@ Click "Start"!`;
             for (let i = 0; i < numSegments; i++) {
                 const startAngle = i * deg * Math.PI / 180;
                 const endAngle = (i + 1) * deg * Math.PI / 180;
+
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, startAngle, endAngle);
                 ctx.closePath();
+
                 ctx.fillStyle = colors[i];
                 ctx.fill();
                 ctx.strokeStyle = '#333';
                 ctx.lineWidth = 2;
                 ctx.stroke();
+
                 const textAngle = startAngle + (endAngle - startAngle) / 2;
                 const textX = centerX + (radius / 1.4) * Math.cos(textAngle);
                 const textY = centerY + (radius / 1.4) * Math.sin(textAngle);
+
                 ctx.save();
                 ctx.translate(textX, textY);
                 ctx.rotate(textAngle + Math.PI / 2);
@@ -448,11 +460,10 @@ Click "Start"!`;
             startBtn.style.display = 'none';
         }
 
-        // ✅ FIXED: BLOCK ONLY AFTER FORM SUCCESS
+        // ✅ FIXED FORM SUBMISSION - URL-ENCODED + DEBUG
         function showForm(amount) {
             prizeAmount = amount;
-            shouldBlockAfterForm = true; // ✅ FLAG TO BLOCK LATER
-            
+
             let formHtml = `
                 <p>Congratulations! You won <strong>${amount}</strong> ${prizeType}!</p>
                 <form id="win-form-visible" class="win-form">
@@ -506,8 +517,10 @@ Click "Start"!`;
             overlay.style.display = 'block';
 
             const visibleForm = document.getElementById('win-form-visible');
-            visibleForm.onsubmit = function(e) {
+            visibleForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
+
+                // Validate
                 const required = visibleForm.querySelectorAll('[required]');
                 let valid = true;
                 required.forEach(field => {
@@ -524,55 +537,58 @@ Click "Start"!`;
                     return;
                 }
 
+                // Get reCAPTCHA
+                let recaptchaToken = '';
+                try {
+                    recaptchaToken = await grecaptcha.execute('6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', {action: 'submit'});
+                } catch (err) {
+                    console.log('reCAPTCHA error:', err);
+                }
+
+                // Collect data
                 const formData = new FormData(visibleForm);
-                const fullName = formData.get('full_name');
-                const netlifyForm = document.querySelector('form[name="win-form"]');
-                netlifyForm.innerHTML = '<input type="hidden" name="form-name" value="win-form">';
-                
-                formData.forEach((value, key) => {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = key;
-                    input.value = value;
-                    netlifyForm.appendChild(input);
-                });
+                const data = Object.fromEntries(formData.entries());
+                data['g-recaptcha-response'] = recaptchaToken;
+
+                // URL Encode for Netlify
+                const encoded = new URLSearchParams(data).toString();
+                console.log('Submitting encoded data:', encoded);
 
                 try {
-                    const recaptchaResponse = grecaptcha.getResponse();
-                    if (recaptchaResponse) {
-                        const recaptchaInput = document.createElement('input');
-                        recaptchaInput.type = 'hidden';
-                        recaptchaInput.name = 'g-recaptcha-response';
-                        recaptchaInput.value = recaptchaResponse;
-                        netlifyForm.appendChild(recaptchaInput);
-                    }
-                } catch(e) {}
+                    const response = await fetch('/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: encoded
+                    });
 
-                netlifyForm.submit();
-                
-                // ✅ BLOCK ONLY NOW - AFTER SUCCESSFUL SUBMISSION!
-                modalMessage.innerHTML = `
-                    <div style="text-align: center; color: green;">
-                        <h3>🎉 SUCCESS!</h3>
-                        <p>Thank you, <strong>${fullName}</strong>!</p>
-                        <p>Your <strong>${amount} ${prizeType}</strong> has been submitted!</p>
-                        <p>🚫 All spins used. Thank you for playing!</p>
-                        <button id="closeSuccess" style="width: 100%; padding: 12px; margin-top: 15px;">Close</button>
-                    </div>
-                `;
-                
-                document.getElementById('closeSuccess').onclick = () => {
-                    modal.style.display = 'none';
-                    overlay.style.display = 'none';
-                    if (shouldBlockAfterForm) {
-                        blockUser(); // ✅ FINAL BLOCK HERE
+                    if (response.ok) {
+                        const fullName = data.full_name;
+                        modalMessage.innerHTML = `
+                            <div style="text-align: center; color: green;">
+                                <h3>🎉 SUCCESS!</h3>
+                                <p>Thank you, <strong>${fullName}</strong>!</p>
+                                <p>Your <strong>${amount} ${prizeType}</strong> has been submitted!</p>
+                                <p>🚫 All spins used. Thank you for playing!</p>
+                                <button id="closeSuccess" style="width: 100%; padding: 12px; margin-top: 15px;">Close</button>
+                            </div>
+                        `;
+                        
+                        document.getElementById('closeSuccess').onclick = () => {
+                            modal.style.display = 'none';
+                            overlay.style.display = 'none';
+                            markGameComplete(); // ✅ Block ONLY after successful submission
+                            resetWheel();
+                        };
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
-                    resetWheel();
-                };
-                
-                shouldBlockAfterForm = false;
-                return false;
-            };
+                } catch (error) {
+                    console.error('Submission error:', error);
+                    alert('Submission failed! Check console for details. Try again?');
+                }
+            });
         }
 
         modalClose.addEventListener('click', () => {
@@ -580,6 +596,7 @@ Click "Start"!`;
             overlay.style.display = 'none';
             spinBtn.disabled = (spinsUsed >= MAX_SPINS && !freeSpinsActive) || spinning;
 
+            // ✅ Start ball game
             if (isBallDrop && modalMessage.textContent.includes('Tap the dropping balls')) {
                 startBallGame = true;
                 gameStartTime = performance.now();
@@ -587,14 +604,19 @@ Click "Start"!`;
                 canvas.addEventListener('click', handleBallTap);
             }
 
-            // ✅ NO BLOCKING HERE - ONLY AFTER FORM!
-            if (modalMessage.textContent.includes('Oops')) {
-                if (shouldBlockAfterForm) blockUser();
+            // ✅ Do NOT block here - wait for form submission
+            if (isBallDrop && (modalMessage.innerHTML.includes('Congratulations') || modalMessage.innerHTML.includes('Thank you'))) {
+                // Only reset, no block
+                resetWheel();
+            } else if (modalMessage.textContent.includes('Oops')) {
+                // Block for Empty/Free end, but not for prizes
+                if (prizeType === '') {
+                    blockUser();
+                }
                 resetWheel();
             }
         });
 
-        // ✅ FIXED SPIN HANDLER - NO EARLY BLOCKING
         const spinHandler = debounce(() => {
             if (spinning || (spinsUsed >= MAX_SPINS && !freeSpinsActive)) return;
             
@@ -616,6 +638,7 @@ Click "Start"!`;
                 const progress = Math.min(elapsed / spinTime, 1);
                 const easeOut = 1 - Math.pow(1 - progress, 5);
                 currentAngle = spinDeg * easeOut;
+
                 drawWheel();
 
                 if (progress < 1) {
@@ -623,8 +646,8 @@ Click "Start"!`;
                 } else {
                     currentAngle = finalNormalized;
                     drawWheel();
-                    spinning = false;
 
+                    spinning = false;
                     const normalizedAngle = finalNormalized;
                     const relativeAngle = (pointerAngle - normalizedAngle + 720) % 360;
                     const winIndex = Math.floor(relativeAngle / deg) % numSegments;
@@ -635,13 +658,16 @@ Click "Start"!`;
                         showModal('🎁 FREE SPIN! Spin AGAIN for FREE!\n♾️ Keep getting free spins!', 'congratulations');
                         spinBtn.disabled = false;
                         spinBtn.textContent = 'FREE Spin!';
-                    } 
-                    // ✅ SET FLAG - BLOCK AFTER FORM, NOT NOW!
-                    else {
-                        shouldBlockAfterForm = true;
-                        
+                    } else {
+                        // Use mandatory spin if not already
+                        if (!freeSpinsActive && spinsUsed < MAX_SPINS) {
+                            spinsUsed = MAX_SPINS;
+                            localStorage.setItem(SPIN_KEY, spinsUsed);
+                        }
+
                         if (result === 'Empty') {
-                            showModal(`Oops, "${result}"!\nComplete this → All spins used!`, 'oops');
+                            showModal(`Oops, "${result}"!\n🚫 Your spins are now used!`, 'oops');
+                            blockUser();
                         } else {
                             prizeType = result;
                             isBallDrop = true;
@@ -650,7 +676,7 @@ Click "Start"!`;
                             popUps = [];
                             points = 0;
                             spinBtn.textContent = 'Tap Balls';
-                            showModal(`🎉 You won ${result}!\nTap balls for 10s → Form → THEN blocked!`, 'congratulations');
+                            showModal(`🎉 You won ${result}!\nTap the dropping balls for 10s to win amount!\n(Complete form after to claim)`, 'congratulations');
                             spinBtn.disabled = false;
                         }
                     }
@@ -660,7 +686,6 @@ Click "Start"!`;
             requestAnimationFrame(animate);
         }, 100);
 
-        // Ball game functions (unchanged)
         function generateBall() {
             const isBoom = Math.random() < 0.3;
             return {
@@ -689,6 +714,7 @@ Click "Start"!`;
 
         function animateBalls() {
             if (!isBallDrop || !startBallGame) return;
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             const elapsed = performance.now() - gameStartTime;
@@ -711,7 +737,9 @@ Click "Start"!`;
 
             balls = balls.filter(ball => {
                 ball.y += ball.velY;
-                if (ball.y - ball.radius > canvas.height) return false;
+                if (ball.y - ball.radius > canvas.height) {
+                    return false;
+                }
                 drawBall(ball);
                 return true;
             });
@@ -724,6 +752,21 @@ Click "Start"!`;
                 ctx.font = 'bold 20px Arial';
                 ctx.textAlign = 'center';
                 ctx.fillText(pop.text, pop.x, pop.y);
+
+                if (pop.isBoom) {
+                    for (let i = 0; i < 5; i++) {
+                        const fireRadius = Math.random() * 10 + 5;
+                        const fireAngle = Math.random() * 2 * Math.PI;
+                        const fireDist = Math.random() * 10;
+                        const fireX = pop.x + fireDist * Math.cos(fireAngle);
+                        const fireY = pop.y + fireDist * Math.sin(fireAngle);
+                        ctx.beginPath();
+                        ctx.arc(fireX, fireY, fireRadius, 0, 2 * Math.PI);
+                        ctx.fillStyle = `rgba(255, ${Math.random() * 100 + 155}, 0, ${pop.alpha})`;
+                        ctx.fill();
+                    }
+                }
+
                 return true;
             });
 
@@ -739,20 +782,27 @@ Click "Start"!`;
 
         function handleBallTap(event) {
             const rect = canvas.getBoundingClientRect();
-            const clickX = event.clientX - rect.left;
-            const clickY = event.clientY - rect.top;
+            const clickX = (event.clientX - rect.left) * (canvas.width / rect.width);
+            const clickY = (event.clientY - rect.top) * (canvas.height / rect.height);
+
             let newBalls = [];
-            balls.forEach(ball => {
+            let tapped = false;
+            balls.forEach((ball, index) => {
                 const dist = Math.sqrt((clickX - ball.x) ** 2 + (clickY - ball.y) ** 2);
                 if (dist < ball.radius * 1.2) {
+                    tapped = true;
                     const delta = ball.isBoom ? -2 : 2;
                     points += delta;
-                    popUps.push({x: ball.x, y: ball.y, alpha: 1, text: delta > 0 ? '+' + delta : delta, isBoom: ball.isBoom});
+                    popUps.push({x: ball.x, y: ball.y, alpha: 1, text: (delta > 0 ? '+' : '') + delta, isBoom: ball.isBoom});
+                    console.log(`Ball tapped: ${ball.isBoom ? 'Boom' : 'Regular'}, Points: ${points}`);
                 } else {
                     newBalls.push(ball);
                 }
             });
             balls = newBalls;
+            if (tapped) {
+                console.log(`Current points after tap: ${points}`);
+            }
         }
 
         spinBtn.addEventListener('click', spinHandler);
