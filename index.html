@@ -28,6 +28,20 @@
             margin-bottom: 10px;
             text-align: center;
         }
+        #spinCount {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            min-width: 120px;
+            text-align: center;
+        }
+        #spinCount.used {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+        }
         #instructionsBtn {
             padding: 8px 16px;
             font-size: 16px;
@@ -171,42 +185,28 @@
             75% { transform: translate(-45%, -50%); }
         }
         @media (max-width: 600px) {
-            .logo {
-                max-width: 150px;
-            }
-            h1 {
-                font-size: 1.8em;
-            }
-            #instructionsBtn {
-                font-size: 14px;
-                padding: 6px 12px;
-            }
-            #wheel {
-                width: 300px;
-                height: 300px;
-            }
-            #spinBtn {
-                font-size: 16px;
-                padding: 8px 16px;
-            }
-            #modal {
-                width: 80%;
-                padding: 15px;
-            }
-            #modalMessage {
-                font-size: 18px;
-            }
+            .logo { max-width: 150px; }
+            h1 { font-size: 1.8em; }
+            #instructionsBtn { font-size: 14px; padding: 6px 12px; }
+            #wheel { width: 300px; height: 300px; }
+            #spinBtn { font-size: 16px; padding: 8px 16px; }
+            #modal { width: 80%; padding: 15px; }
+            #modalMessage { font-size: 18px; }
         }
     </style>
 </head>
 <body>
-    <!-- ✅ Netlify Form Declaration - HIDDEN -->
+    <!-- ✅ Netlify Form Declaration -->
     <form name="win-form" data-netlify="true" data-netlify-recaptcha="true" hidden>
         <input type="hidden" name="form-name" value="win-form">
     </form>
 
     <img src="https://raw.githubusercontent.com/hopmos/webimage/main/Hopmoslogo.png" alt="HOPMOS Giveaway Logo" class="logo">
     <h1>GIVEAWAY GAMES</h1>
+    
+    <!-- ✅ SPIN COUNTER DISPLAY -->
+    <div id="spinCount">🎯 Spins Left: <span id="spinLeft">1</span>/1</div>
+    
     <button id="instructionsBtn">How to Play</button>
     <canvas id="wheel" width="400" height="400"></canvas>
     <button id="spinBtn" disabled>Spin</button>
@@ -217,10 +217,15 @@
         <button id="startBtn" style="display: none;">Start</button>
     </div>
 
-    <!-- ✅ reCAPTCHA Script - LOADS FIRST -->
     <script src="https://www.google.com/recaptcha/api.js?render=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></script>
     
     <script>
+        // ✅ LOCALSTORAGE SPIN TRACKING
+        const SPIN_KEY = 'hopmos_spins_used';
+        let spinsUsed = parseInt(localStorage.getItem(SPIN_KEY)) || 0;
+        const MAX_SPINS = 1;
+        let spinsLeft = MAX_SPINS - spinsUsed;
+
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         const spinBtn = document.getElementById('spinBtn');
@@ -230,6 +235,8 @@
         const modalMessage = document.getElementById('modalMessage');
         const modalClose = document.getElementById('modalClose');
         const startBtn = document.getElementById('startBtn');
+        const spinCount = document.getElementById('spinCount');
+        const spinLeft = document.getElementById('spinLeft');
 
         const segments = ['Airtime', 'Empty', 'Data', 'Empty', 'Cash', 'Free spin'];
         const colors = ['#FF6347', '#A9A9A9', '#4682B4', '#D3D3D3', '#32CD32', '#FFD700'];
@@ -248,38 +255,52 @@
         let balls = [];
         let popUps = [];
         let points = 0;
-        let hasSpun = false;
+        let hasSpun = spinsUsed >= MAX_SPINS;
         let gameStartTime = 0;
         let startBallGame = false;
         const gameDuration = 10000;
 
-        // ✅ SCROLLABLE INSTRUCTIONS WITH SCROLLBAR
+        // ✅ UPDATE SPIN COUNTER DISPLAY
+        function updateSpinDisplay() {
+            spinLeft.textContent = spinsLeft;
+            if (spinsLeft === 0) {
+                spinCount.classList.add('used');
+                spinBtn.disabled = true;
+                spinBtn.textContent = 'No Spins Left';
+                showModal('🎯 You have used your 1 spin! Thank you for playing HOPMOS Giveaway!', 'oops');
+            }
+        }
+
+        // ✅ SCROLLABLE INSTRUCTIONS
         const instructionsText = `Welcome to HOPMOS Giveaway Games!
+
+🎯 1 SPIN PER USER RULE:
 
 How to Play:
 
-1. Spin the Wheel
-   - Spin once to win: Airtime, Data, Cash, Free Spin, or Empty.
+1. Spin the Wheel (1 TIME ONLY)
+   - Win: Airtime, Data, Cash, Free Spin, or Empty.
 
 2. Wheel Outcomes
-   - Free Spin: Spin again for another chance.
-   - Empty: Game ends.
-   - Airtime/Data/Cash: Play the ball-dropping game.
+   - Free Spin: Spin again (uses your 1 spin)
+   - Empty: Game ends
+   - Airtime/Data/Cash: Play ball game
 
 3. Ball-Dropping Game
-   - Tap falling balls for 10 seconds to earn points:
-     - Green Balls: +2 points
-     - Boom Balls (💣): -2 points
+   - Tap balls for 10 seconds:
+     - Green: +2 points
+     - Boom (💣): -2 points
 
-4. Prize Calculation
-   - Prize = Points × 10
-     - Airtime/Cash: Value in Naira (₦)
-     - Data: Value in Megabytes (MB)
+4. Prize = Points × 10
+   - Airtime/Cash: ₦ amount
+   - Data: MB amount
 
-5. Claim Your Prize
-   - Submit a form with your details to receive your prize.
+5. Claim Prize
+   - Submit form to receive!
 
-Click "Start" to begin!`;
+⚠️ After 1 spin, you're BLOCKED until next giveaway!
+
+Click "Start" to use your spin!`;
 
         function showInstructions() {
             modalMessage.textContent = instructionsText;
@@ -297,10 +318,21 @@ Click "Start" to begin!`;
             overlay.style.display = 'none';
             modalClose.style.display = 'inline-block';
             startBtn.style.display = 'none';
-            spinBtn.disabled = false;
+            spinBtn.disabled = spinsLeft === 0;
+            updateSpinDisplay();
         });
 
+        // ✅ MARK SPIN AS USED
+        function useSpin() {
+            spinsUsed++;
+            spinsLeft--;
+            localStorage.setItem(SPIN_KEY, spinsUsed);
+            hasSpun = true;
+            updateSpinDisplay();
+        }
+
         showInstructions();
+        updateSpinDisplay();
 
         function debounce(func, wait) {
             let timeout;
@@ -402,9 +434,6 @@ Click "Start" to begin!`;
             spinBtn.textContent = 'Spin';
             canvas.removeEventListener('click', handleBallTap);
             drawWheel();
-            if (hasSpun) {
-                spinBtn.disabled = true;
-            }
         }
 
         function showModal(message, type) {
@@ -416,7 +445,6 @@ Click "Start" to begin!`;
             startBtn.style.display = 'none';
         }
 
-        // ✅ FIXED: FORM SUBMISSION - WORKS 100% NOW
         function showForm(amount) {
             prizeAmount = amount;
 
@@ -427,6 +455,7 @@ Click "Start" to begin!`;
                     <input type="hidden" name="prize_type" value="${prizeType}">
                     <input type="hidden" name="amount" value="${amount}">
                     <input type="hidden" name="points" value="${points}">
+                    <input type="hidden" name="spins_used" value="${spinsUsed}">
                     
                     <label>Full Name: 
                         <input type="text" name="full_name" required placeholder="e.g., John Doe">
@@ -470,12 +499,10 @@ Click "Start" to begin!`;
             modal.style.display = 'block';
             overlay.style.display = 'block';
 
-            // ✅ FIXED SUBMISSION - ONE EVENT LISTENER ONLY
             const visibleForm = document.getElementById('win-form-visible');
             visibleForm.onsubmit = function(e) {
                 e.preventDefault();
                 
-                // Validate required fields
                 const required = visibleForm.querySelectorAll('[required]');
                 let valid = true;
                 required.forEach(field => {
@@ -492,11 +519,9 @@ Click "Start" to begin!`;
                     return;
                 }
 
-                // Get form data
                 const formData = new FormData(visibleForm);
                 const fullName = formData.get('full_name');
 
-                // Copy to HIDDEN Netlify form
                 const netlifyForm = document.querySelector('form[name="win-form"]');
                 netlifyForm.innerHTML = '<input type="hidden" name="form-name" value="win-form">';
                 
@@ -508,7 +533,6 @@ Click "Start" to begin!`;
                     netlifyForm.appendChild(input);
                 });
 
-                // Add reCAPTCHA (optional - works without too!)
                 try {
                     const recaptchaResponse = grecaptcha.getResponse();
                     if (recaptchaResponse) {
@@ -519,28 +543,24 @@ Click "Start" to begin!`;
                         netlifyForm.appendChild(recaptchaInput);
                     }
                 } catch(e) {
-                    console.log('reCAPTCHA not loaded, submitting without');
+                    console.log('reCAPTCHA not loaded');
                 }
 
-                // ✅ SUBMIT TO NETLIFY - INSTANT!
                 netlifyForm.submit();
                 
-                // Show SUCCESS immediately
                 modalMessage.innerHTML = `
                     <div style="text-align: center; color: green;">
                         <h3>🎉 SUCCESS!</h3>
                         <p>Thank you, <strong>${fullName}</strong>!</p>
                         <p>Your <strong>${amount} ${prizeType}</strong> has been submitted!</p>
-                        <p>We'll process within 24 hours. 📱💰</p>
-                        <button id="closeSuccess" style="width: 100%; padding: 12px; margin-top: 15px;">Close & Play Again</button>
+                        <p>✅ Spin used. No more spins allowed.</p>
+                        <button id="closeSuccess" style="width: 100%; padding: 12px; margin-top: 15px;">Close</button>
                     </div>
                 `;
                 
                 document.getElementById('closeSuccess').onclick = () => {
                     modal.style.display = 'none';
                     overlay.style.display = 'none';
-                    hasSpun = true;
-                    spinBtn.disabled = true;
                     resetWheel();
                 };
                 
@@ -551,7 +571,7 @@ Click "Start" to begin!`;
         modalClose.addEventListener('click', () => {
             modal.style.display = 'none';
             overlay.style.display = 'none';
-            spinBtn.disabled = hasSpun || spinning;
+            spinBtn.disabled = spinsLeft === 0 || spinning;
 
             if (isBallDrop && modalMessage.textContent.includes('Tap the dropping balls')) {
                 startBallGame = true;
@@ -563,18 +583,20 @@ Click "Start" to begin!`;
             if (isBallDrop && (modalMessage.innerHTML.includes('Congratulations') || modalMessage.innerHTML.includes('Thank you'))) {
                 resetWheel();
             } else if (modalMessage.textContent.includes('Oops')) {
-                hasSpun = true;
-                spinBtn.disabled = true;
                 resetWheel();
             }
         });
 
-        // Rest of the code remains the same...
+        // ✅ FIXED SPIN HANDLER - 1 SPIN ONLY
         const spinHandler = debounce(() => {
-            if (spinning || hasSpun) return;
+            if (spinning || spinsLeft === 0) return;
+            
+            // ✅ USE SPIN IMMEDIATELY
+            useSpin();
+            
             spinning = true;
-            hasSpun = true;
             spinBtn.disabled = true;
+            spinBtn.textContent = 'Spinning...';
             currentAngle = 0;
             drawWheel();
 
@@ -605,13 +627,12 @@ Click "Start" to begin!`;
                     const winIndex = Math.floor(relativeAngle / deg) % numSegments;
                     const result = currentSegments[winIndex];
 
+                    // ✅ FREE SPIN ALSO USES THE 1 SPIN
                     if (result === 'Free spin') {
-                        showModal('Congratulations! You got a Free Spin! Spin the first wheel again!', 'congratulations');
-                        hasSpun = false;
-                        spinBtn.disabled = false;
+                        showModal('Congratulations! You got a Free Spin!\n⚠️ This uses your 1 spin!', 'congratulations');
+                        spinBtn.disabled = true; // Still blocks after free spin
                     } else if (result === 'Empty') {
-                        showModal('Oops, try again!', 'oops');
-                        spinBtn.disabled = true;
+                        showModal('Oops, try again!\n⚠️ Your 1 spin is used.', 'oops');
                     } else if (result === 'Airtime') {
                         prizeType = 'Airtime';
                         isBallDrop = true;
@@ -649,6 +670,7 @@ Click "Start" to begin!`;
             requestAnimationFrame(animate);
         }, 100);
 
+        // Ball game functions (unchanged)
         function generateBall() {
             const isBoom = Math.random() < 0.3;
             return {
@@ -749,11 +771,9 @@ Click "Start" to begin!`;
             const clickY = event.clientY - rect.top;
 
             let newBalls = [];
-            let tapped = false;
             balls.forEach(ball => {
                 const dist = Math.sqrt((clickX - ball.x) ** 2 + (clickY - ball.y) ** 2);
                 if (dist < ball.radius * 1.2) {
-                    tapped = true;
                     const delta = ball.isBoom ? -2 : 2;
                     points += delta;
                     popUps.push({x: ball.x, y: ball.y, alpha: 1, text: delta > 0 ? '+' + delta : delta, isBoom: ball.isBoom});
